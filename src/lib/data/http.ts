@@ -11,8 +11,9 @@ export class HttpError extends Error {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function fetchWithRetry(url: string, opts: { retries?: number; timeoutMs?: number; headers?: Record<string, string> } = {}): Promise<Response> {
+export async function fetchWithRetry(url: string, opts: { retries?: number; timeoutMs?: number; headers?: Record<string, string>; backoffBaseMs?: number } = {}): Promise<Response> {
   const retries = opts.retries ?? 3;
+  const base = opts.backoffBaseMs ?? 1000;
   let lastErr: unknown;
   for (let attempt = 0; attempt <= retries; attempt++) {
     const ctrl = new AbortController();
@@ -23,7 +24,7 @@ export async function fetchWithRetry(url: string, opts: { retries?: number; time
       if (res.status === 429 || res.status >= 500) {
         lastErr = new HttpError(`HTTP ${res.status}`, res.status);
         const retryAfter = Number(res.headers.get("retry-after"));
-        await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter, 30) * 1000 : 1000 * 2 ** attempt);
+        await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter, 60) * 1000 : base * 2 ** attempt);
         continue;
       }
       if (!res.ok) throw new HttpError(`HTTP ${res.status}`, res.status);
@@ -35,7 +36,7 @@ export async function fetchWithRetry(url: string, opts: { retries?: number; time
       if (e instanceof HttpError && e.status < 500 && e.status !== 429) throw e;
       // A hanging endpoint rarely recovers within seconds: retry a timeout only once.
       if (timedOut && attempt >= 1) break;
-      if (attempt < retries) await sleep(1000 * 2 ** attempt);
+      if (attempt < retries) await sleep(base * 2 ** attempt);
     }
   }
   throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));

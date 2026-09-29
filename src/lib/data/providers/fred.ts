@@ -60,16 +60,30 @@ export function parseFredCsv(text: string): Obs[] {
   return out;
 }
 
+// FRED allows 120 requests/minute per API key. Space calls ~0.6s apart
+// (<= 100/min) across all concurrent workers in this process.
+const MIN_INTERVAL_MS = 600;
+let nextSlot = 0;
+async function throttle(): Promise<void> {
+  const now = Date.now();
+  const wait = Math.max(0, nextSlot - now);
+  nextSlot = Math.max(now, nextSlot) + MIN_INTERVAL_MS;
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+}
+
+async function fredGet(url: string): Promise<Response> {
+  await throttle();
+  return fetchWithRetry(url, { retries: 4, backoffBaseMs: 5000 });
+}
+
 export async function fetchFred(def: SeriesDef): Promise<FetchResult> {
   const key = process.env.FRED_API_KEY;
   const id = encodeURIComponent(def.sourceId);
   try {
     if (key) {
       const base = "https://api.stlouisfed.org/fred";
-      const [obsRes, metaRes] = await Promise.all([
-        fetchWithRetry(`${base}/series/observations?series_id=${id}&api_key=${encodeURIComponent(key)}&file_type=json`),
-        fetchWithRetry(`${base}/series?series_id=${id}&api_key=${encodeURIComponent(key)}&file_type=json`),
-      ]);
+      const obsRes = await fredGet(`${base}/series/observations?series_id=${id}&api_key=${encodeURIComponent(key)}&file_type=json`);
+      const metaRes = await fredGet(`${base}/series?series_id=${id}&api_key=${encodeURIComponent(key)}&file_type=json`);
       const obsJson = ObsSchema.parse(await obsRes.json());
       const metaJson = MetaSchema.safeParse(await metaRes.json());
       const obs: Obs[] = [];
@@ -82,7 +96,7 @@ export async function fetchFred(def: SeriesDef): Promise<FetchResult> {
         sourceLastUpdated: metaJson.success ? normalizeFredTimestamp(metaJson.data.seriess[0].last_updated) : null,
       };
     }
-    const res = await fetchWithRetry(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}`);
+    const res = await fredGet(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}`);
     const text = await res.text();
     if (text.length > 20_000_000) throw new Error("Response too large");
     return { obs: sortAndClean(parseFredCsv(text)), sourceLastUpdated: null };
