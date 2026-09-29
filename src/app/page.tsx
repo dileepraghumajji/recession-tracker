@@ -30,11 +30,14 @@ export default async function Dashboard() {
   const { scores, scoreChanges: ch, regime, confluence, rates, explanation: ex, dataQuality: dq } = snap;
   const recMove = ch.recession.m1;
   const direction = recMove === null ? "No 1-month comparison available" : recMove > 2 ? `Increasing (+${recMove.toFixed(0)} pts over 1M)` : recMove < -2 ? `Decreasing (${recMove.toFixed(0)} pts over 1M)` : "Broadly stable over 1M";
-  const sources = scores.recession.categories
+  // Same rule as the explanation engine: categories at Watch or worse first
+  // (by weighted points); if none, the largest weighted contributors.
+  const ranked = scores.recession.categories
     .filter((c) => c.score !== null)
     .map((c) => ({ c, pts: c.effectiveWeight * (c.score as number) }))
-    .sort((a, b) => b.pts - a.pts)
-    .slice(0, 3);
+    .sort((a, b) => b.pts - a.pts);
+  const stressed = ranked.filter((x) => (x.c.score as number) >= 50);
+  const sources = (stressed.length ? stressed : ranked).slice(0, 3);
 
   return (
     <div className="space-y-5">
@@ -46,7 +49,7 @@ export default async function Dashboard() {
         </div>
         <div>
           <div className="panel-title mb-1">2 · Main contributors</div>
-          <div>{sources.map((s) => s.c.label).join(", ") || "n/a"}</div>
+          <div>{sources.map((s) => `${s.c.label} (${(s.c.score as number).toFixed(0)})`).join(", ") || "n/a"}</div>
         </div>
         <div>
           <div className="panel-title mb-1">3 · Source of stress</div>
