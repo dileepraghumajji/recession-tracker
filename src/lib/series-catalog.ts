@@ -86,7 +86,7 @@ export const SERIES: SeriesDef[] = [
   manual("ISM_SVC_PMI", "ISM Services PMI", "Institute for Supply Management (licensed, manual load)", "M", "index", "Proprietary - manual load only."),
   manual("ISM_SVC_NO", "ISM Services New Orders", "Institute for Supply Management (licensed, manual load)", "M", "index", "Proprietary - manual load only."),
   fred("PHILLY_MFG", "GACDFSA066MSFRBPHI", "Philadelphia Fed Manufacturing: current general activity", "Federal Reserve Bank of Philadelphia (via FRED)", "M", "diffusion index"),
-  fred("EMPIRE_MFG", "GACDINA066MSFRBNY", "NY Fed Empire State Manufacturing: general business conditions", "Federal Reserve Bank of New York (via FRED)", "M", "diffusion index"),
+  fred("EMPIRE_MFG", "GACDISA066MSFRBNY", "NY Fed Empire State Manufacturing: general business conditions", "Federal Reserve Bank of New York (via FRED)", "M", "diffusion index"),
   fred("INDPRO", "INDPRO", "Industrial production index", FED_BOARD, "M", "index 2017=100"),
   fred("RRSFS", "RRSFS", "Real retail and food services sales", CENSUS, "M", "millions 1982-84 $"),
   fred("PCEC96", "PCEC96", "Real personal consumption expenditures", BEA, "M", "billions chained 2017 $"),
