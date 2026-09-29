@@ -121,13 +121,25 @@ export const memoryStore: Store = {
 };
 
 // ----------------------------------------------------------------- postgres
+/**
+ * DATABASE_SSL: "require" = TLS with certificate verification (system CAs, or
+ * DATABASE_CA_CERT when set, e.g. Supabase's root CA); "no-verify" = TLS without
+ * verification (encrypted, but not protected against MITM); unset = no TLS.
+ */
+export function sslConfig() {
+  const mode = process.env.DATABASE_SSL;
+  if (mode === "require") return { rejectUnauthorized: true, ca: process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n") || undefined };
+  if (mode === "no-verify") return { rejectUnauthorized: false };
+  return undefined;
+}
+
 async function pool(): Promise<Pool> {
   if (g.__mrsmPool) return g.__mrsmPool;
   const { Pool } = await import("pg");
   g.__mrsmPool = new Pool({
     connectionString: process.env.DATABASE_URL,
     max: 5,
-    ssl: process.env.DATABASE_SSL === "require" ? { rejectUnauthorized: true } : undefined,
+    ssl: sslConfig(),
   });
   return g.__mrsmPool;
 }

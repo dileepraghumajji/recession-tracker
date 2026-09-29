@@ -5,11 +5,12 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
+import { sslConfig } from "../src/lib/data/store";
 
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
-  const client = new Client({ connectionString: url, ssl: process.env.DATABASE_SSL === "require" ? { rejectUnauthorized: true } : undefined });
+  const client = new Client({ connectionString: url, ssl: sslConfig() });
   await client.connect();
   try {
     await client.query("CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())");
