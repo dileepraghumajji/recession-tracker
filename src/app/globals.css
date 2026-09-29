@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+/* Theme tokens. Dark is the default; light is opt-in via the header toggle. */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #222220;
+  --border: rgba(255, 255, 255, 0.1);
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --muted: #898781;
+  --accent: #3987e5;
+  --s-recession: #3987e5;
+  --s-inflation: #d95926;
+  --s-financial: #199e70;
+  --s-overall: #c3c2b7;
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --good-ink: #0ca30c;
+  --band: rgba(208, 59, 59, 0.08);
+  --demo: #fab219;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f0efec;
+  --border: rgba(11, 11, 11, 0.1);
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #6f6d68;
+  --accent: #2a78d6;
+  --s-recession: #2a78d6;
+  --s-inflation: #eb6834;
+  --s-financial: #1baf7a;
+  --s-overall: #52514e;
+  --good-ink: #006300;
+  --band: rgba(208, 59, 59, 0.07);
+  --demo: #b77900;
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html,
+body {
+  background: var(--page);
+  color: var(--ink);
+}
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.panel-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.sig-normal { --sig: var(--good); }
+.sig-watch { --sig: var(--warning); }
+.sig-elevated { --sig: var(--serious); }
+.sig-severe { --sig: var(--critical); }
+.sig-na { --sig: var(--muted); }
+.sig-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--sig);
+  flex: none;
+}
+.trend-bad { color: var(--serious); }
+.trend-good { color: var(--good-ink); }
+.trend-flat { color: var(--muted); }
+.status-LIVE { color: var(--good-ink); }
+.status-RECENT { color: var(--ink-2); }
+.status-STALE { color: var(--serious); }
+.status-UNAVAILABLE { color: var(--muted); }
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+table.data th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+table.data td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+table.data td.r,
+table.data th.r {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+table.data tr:hover td {
+  background: var(--surface-2);
+}
+a.link {
+  color: var(--accent);
+}
+a.link:hover {
+  text-decoration: underline;
+}
+.btn {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--ink);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.btn:hover {
+  border-color: var(--muted);
+}
+.btn[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.input {
+  border: 1px solid var(--border);
+  background: var(--page);
+  color: var(--ink);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+.prose-sm p {
+  margin: 0.5em 0;
+}
+.prose-sm h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 1.2em 0 0.4em;
+}
+.prose-sm h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 1em 0 0.3em;
+}
+.prose-sm ul {
+  list-style: disc;
+  padding-left: 1.25em;
+}
+.prose-sm li {
+  margin: 0.25em 0;
+}
+.prose-sm code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--surface-2);
+  padding: 1px 4px;
+  border-radius: 3px;
+}

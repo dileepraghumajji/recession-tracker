@@ -1,0 +1,40 @@
+{
+  "name": "macro-recession-stress-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Transparent macro and financial-market stress dashboard (analytical tool, not a recession predictor).",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "refresh": "tsx scripts/refresh.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "next": "^16.3.7",
+    "pg": "^8.23.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "recharts": "^3.10.1",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.20.4",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "5.9",
+    "vitest": "^5.0.2"
+  }
+}
