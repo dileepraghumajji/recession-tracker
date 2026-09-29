@@ -2,6 +2,7 @@
  * Data service: refresh orchestration, caching and snapshot/backtest access.
  * Server-only (reads secrets from the environment).
  */
+import { after } from "next/server";
 import { evaluateRule, describeRule } from "../alerts";
 import { prepareIndicators, type PreparedIndicator } from "../engine/analyze";
 import { runHistorical, type MonthRecord } from "../engine/historical";
@@ -69,10 +70,15 @@ export async function refreshAll(): Promise<RefreshReport> {
       }
       return true;
     });
+    // Circuit breaker: if the source is unreachable (several timeouts and no
+    // success yet), fail the remaining series fast instead of waiting minutes.
+    let timeouts = 0;
+    const tripped = () => timeouts >= 6 && ok.length === 0;
     // FRED allows ~120 requests/minute per key; 4 concurrent series is well inside that.
     await mapLimit(todo, mode === "demo" ? 8 : 4, async (def) => {
       const now = new Date().toISOString();
       try {
+        if (tripped()) throw new Error("source unreachable (repeated timeouts); skipped this run");
         const res = await fetchOne(def, mode);
         if (res.obs.length === 0) throw new Error("no observations returned");
         const meta: SeriesMeta = {
@@ -89,6 +95,7 @@ export async function refreshAll(): Promise<RefreshReport> {
         ok.push(def.key);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
+        if (/timed out/.test(msg)) timeouts++;
         failed.push({ key: def.key, error: msg });
         await store.saveSeries(
           { key: def.key, provider: def.provider, sourceId: def.sourceId, fetchedAt: now, sourceLastUpdated: null, fetchStatus: "error", fetchError: msg.slice(0, 500), synthetic: mode === "demo" },
@@ -127,6 +134,18 @@ export async function refreshAll(): Promise<RefreshReport> {
   }
 }
 
+const FIRST_LOAD_BUDGET_MS = 25_000;
+
+/** Keeps a serverless invocation alive until background work finishes (Next.js `after`), when inside a request. */
+function keepAlive(p: Promise<unknown>) {
+  const guarded = p.catch((e) => console.error("background refresh failed", e));
+  try {
+    after(() => guarded);
+  } catch {
+    /* outside a request scope (scripts): the promise simply runs */
+  }
+}
+
 const TTL_MS = () => Math.max(60, Number(process.env.CACHE_TTL_SECONDS) || 3600) * 1000;
 
 async function ensureData(): Promise<void> {
@@ -134,7 +153,11 @@ async function ensureData(): Promise<void> {
   const all = await store.loadAll();
   const keys = Object.keys(all);
   if (keys.length === 0) {
-    await refreshAll();
+    // First load on this instance: wait up to FIRST_LOAD_BUDGET_MS, then render
+    // with whatever is available (marked unavailable) while loading continues.
+    const job = refreshAll();
+    keepAlive(job);
+    await Promise.race([job, new Promise((r) => setTimeout(r, FIRST_LOAD_BUDGET_MS))]);
     return;
   }
   const newest = keys.reduce<string | null>((m, k) => {
@@ -150,7 +173,7 @@ async function ensureData(): Promise<void> {
   const limit = store.kind === "memory" ? TTL_MS() : 26 * 3600 * 1000;
   if (age > limit && !cache().refreshing) {
     // Serve current data; refresh in the background (the scheduled cron is the primary mechanism).
-    void refreshAll().catch((e) => console.error("background refresh failed", e));
+    keepAlive(refreshAll());
   }
 }
 

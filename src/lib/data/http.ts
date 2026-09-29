@@ -30,8 +30,11 @@ export async function fetchWithRetry(url: string, opts: { retries?: number; time
       return res;
     } catch (e) {
       clearTimeout(timer);
-      lastErr = e;
+      const timedOut = ctrl.signal.aborted;
+      lastErr = timedOut ? new Error(`timed out after ${Math.round((opts.timeoutMs ?? 20_000) / 1000)}s`) : e;
       if (e instanceof HttpError && e.status < 500 && e.status !== 429) throw e;
+      // A hanging endpoint rarely recovers within seconds: retry a timeout only once.
+      if (timedOut && attempt >= 1) break;
       if (attempt < retries) await sleep(1000 * 2 ** attempt);
     }
   }
