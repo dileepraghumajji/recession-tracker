@@ -3,6 +3,9 @@
 @import "react-grid-layout/css/styles.css";
 @import "../platform/ui/tokens.css";
 
+/* `sidebar-collapsed:` applies while the desktop sidebar is collapsed (data-sidebar on <html>). */
+@custom-variant sidebar-collapsed (:root[data-sidebar="collapsed"] &);
+
 /* Tailwind colour/size utilities mapped to the design-system tokens (values live in platform/ui/tokens.css). */
 @theme inline {
   --color-page: var(--page);
