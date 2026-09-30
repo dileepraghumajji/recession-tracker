@@ -73,6 +73,7 @@ interface Cache {
   liveRefreshing: Promise<void> | null;
   lastLiveRefresh: number;
   lastProbe: number;
+  lastBackfill: number;
   prepared: { version: string; series: SeriesMap; chains: OptionChainSnapshot[]; prepared: Prepared[] } | null;
   snapshots: Map<string, Snapshot>;
   history: Map<string, HistoryPoint[]>;
@@ -80,7 +81,7 @@ interface Cache {
 const g = globalThis as unknown as { __imsCaches?: Record<string, Cache> };
 function cache(ctx: DataContext): Cache {
   g.__imsCaches ??= {};
-  return (g.__imsCaches[ctx.key] ??= { refreshing: null, liveRefreshing: null, lastLiveRefresh: 0, lastProbe: 0, prepared: null, snapshots: new Map(), history: new Map() });
+  return (g.__imsCaches[ctx.key] ??= { refreshing: null, liveRefreshing: null, lastLiveRefresh: 0, lastProbe: 0, lastBackfill: 0, prepared: null, snapshots: new Map(), history: new Map() });
 }
 function invalidate(ctx: DataContext) {
   const c = cache(ctx);
@@ -444,8 +445,16 @@ async function ensureData(ctx: DataContext): Promise<void> {
   }, null);
   const age = newest ? Date.now() - Date.parse(newest) : Infinity;
   const limit = store.kind === "memory" ? TTL_MS() : 26 * 3600 * 1000;
-  if (age > limit && !cache(ctx).refreshing) keepAlive(refreshContext(ctx));
-  else void refreshLive(ctx);
+  // A provider configured after the last refresh (e.g. a Dhan token added to a running deployment):
+  // load what it supplies now instead of waiting for the data to go stale or for the nightly cron.
+  // Throttled; a failed fetch stores error metadata, so the same series is not retried on every request.
+  const c = cache(ctx);
+  const unloaded = ctx.mode === "live" && SERIES.some((d) => !all[d.key] && providerFor(d) !== null);
+  const backfill = unloaded && Date.now() - c.lastBackfill > 15 * 60_000;
+  if ((age > limit || backfill) && !c.refreshing) {
+    if (backfill) c.lastBackfill = Date.now();
+    keepAlive(refreshContext(ctx));
+  } else void refreshLive(ctx);
   if (ctx.fallback) keepAlive(probeProviders(ctx));
 }
 
