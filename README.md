@@ -56,8 +56,10 @@ Dashboard-specific variables are documented in each dashboard's README.
 * **Vercel**: set the env vars, attach Postgres, run `npm run db:migrate` once. `vercel.json` calls
   `/api/cron/refresh` daily at 22:30 UTC; it refreshes every dashboard independently (one failing never blocks another).
   `/api/cron/india-breadth` runs four times each morning to compute India market breadth from Dhan stock candles
-  (resumable across calls; see `docs/dashboards/india-sentiment/README.md`).
-* **Anywhere else**: `npm run build && npm start`, plus system cron entries for `npm run refresh` and `npm run breadth`.
+  (resumable across calls; see `docs/dashboards/india-sentiment/README.md`), and `/api/cron/india-official` daily at
+  03:20 UTC imports the RBI repo rate from the BIS policy-rate statistics.
+* **Anywhere else**: `npm run build && npm start`, plus system cron entries for `npm run refresh`, `npm run breadth`
+  and `npm run official`.
 
 ## Project layout
 

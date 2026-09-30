@@ -29,7 +29,8 @@ trading instructions.
 | Twelve Data (automatic, when configured) | On the free plan: gold spot (XAU/USD) and ETF proxies for the Russell 2000 (IWM), MSCI Emerging Markets (EEM), MSCI World (URTH) and silver (SLV) | `TWELVE_DATA_API_KEY` — see [Twelve Data provider](#twelve-data-provider) |
 | FRED (automatic) | USD/INR (Fed H.10), broad dollar, US yields, VIX, HY & EM OAS, S&P 500, Nasdaq, Nikkei, Brent, WTI, natural gas, copper, aluminium, India 10Y & 3M interbank (OECD), India IP, CPI, exports, GDP, reserves | `npm run refresh` / cron |
 | Licensed market data | NSE/BSE indices, India VIX, breadth, FII/DII & participant OI, option chains, G-Sec curve (CCIL), corporate spreads, valuation, consensus EPS, global indices not on FRED | a `MarketDataProvider` adapter, or `POST /api/india-sentiment/ingest` |
-| Official releases | RBI (repo, call money, liquidity, CP/CD, credit/deposit, NPA, reserves), AMFI, NSDL/CDSL, SEBI, MOSPI, Ministry of Finance | `POST /api/india-sentiment/ingest` |
+| BIS policy-rate statistics (automatic) | RBI policy repo rate (`rbi:repo`, from 3 Apr 2001) | official-series job — see [Official releases (RBI, FBIL)](#official-releases-rbi-fbil) |
+| Official releases | RBI (call money, liquidity, government cash, CP/CD, credit/deposit, NPA, weekly reserves), G-Sec yields, market USD/INR, AMFI, NSDL/CDSL, SEBI, MOSPI, Ministry of Finance | `POST /api/india-sentiment/ingest` |
 
 ### Twelve Data provider
 
@@ -132,6 +133,36 @@ with headers `access-token` and `client-id`. The token has full trading scope, s
   one stopped. Self-hosted: `npm run breadth` (no time limit), e.g. `40 23 * * * cd /app && npm run breadth`.
   Run `npm run breadth` once locally against the production database to build the history in one go.
   A database is required in practice: with the in-memory store, progress and results are lost on restart.
+
+### Official releases (RBI, FBIL)
+
+Researched on 2026-09-30: for each official series we looked for an API or a CSV/XLSX download whose terms
+allow automated download. HTML pages are never scraped and bot protection is never bypassed.
+
+| Series | Official source | Format | Frequency | Automated? |
+|---|---|---|---|---|
+| `rbi:repo` | [BIS WS_CBPOL `D.IN`](https://data.bis.org/topics/CBPOL/BIS%2CWS_CBPOL%2C1.0/D.IN) (source: Reserve Bank of India) | SDMX-CSV API | daily (business days) | **Yes.** From 3 Apr 2001, when the repo rate became the policy rate (BIS shows the Bank Rate before that; it is not used). BIS allows reuse, including commercial, with the BIS cited. India lags: on 2026-09-30 the last value was for 2026-07-23 |
+| `rbi:call_money`, `rbi:system_liquidity` | RBI Money Market Operations (daily press release) | HTML only | daily | No: HTML only; DBIE has no public API |
+| `rbi:govt_cash`, `rbi:forex_reserves` | RBI Weekly Statistical Supplement, Tables 1–2 | XLSX/PDF on rbidocs.rbi.org.in | weekly | No: files are served only after a JavaScript bot challenge |
+| `rbi:bank_credit_yoy`, `rbi:deposit_yoy`, `rbi:credit_deposit_ratio` | Scheduled Banks' Statement of Position | XLSX on rbidocs.rbi.org.in | fortnightly | No: bot challenge |
+| `rbi:cp_3m`, `rbi:cd_3m` | FBIL CP/CD curves; RBI WSS | FBIL web app; rbidocs | daily; fortnightly | No: FBIL display/redistribution needs a paid licence; rbidocs bot challenge |
+| `rbi:gnpa` | RBI Financial Stability Report | PDF on rbidocs | half-yearly | No: bot challenge |
+| `gsec:2y`, `gsec:5y`, `gsec:10y` | FBIL G-Sec par yield curve; CCIL tenor-wise yields | web apps | daily | No: FBIL licence; CCIL's terms forbid automated collection |
+| `fx:USDINR` | FBIL reference rate | web app | daily | No: fee-liable since April 2019, redistribution needs a licence (`fred:DEXINUS` is used meanwhile) |
+
+Also checked: DBIE (data.rbi.org.in) serves data only through an internal API with encrypted, session-keyed
+requests (not a public interface); RBI's website terms prohibit caching or framing its content without permission;
+the RBI press-release RSS feed carries releases as HTML; data.gov.in's RBI reserves datasets are annual.
+
+**Job** (`lib/data/official.ts`, shared BIS client `src/platform/data/bis.ts`): one request per series. Every row's
+frequency, country, unit (`UNIT_MEASURE` 368 = per cent per annum, `UNIT_MULT` 0) is checked; days BIS leaves empty
+(`NaN`) stay empty. A response with fewer than 4,000 observations, a value outside 0–20% or a future date is
+rejected as a whole and the stored series is kept (the error shows on the series). BIS is authoritative for the
+dates it covers; observations ingested for later dates (a newer RBI decision) are kept until BIS reaches them.
+Stored exactly as BIS publishes it: values on every calendar day in 2002–03, and the 2019 decisions dated one day
+after RBI's announcement (e.g. the 7 Feb 2019 cut appears on 8 Feb). Schedule: `vercel.json` calls
+`/api/cron/india-official` daily at 03:20 UTC (08:50 IST); self-hosted: `npm run official`. No lease or
+checkpoint is needed: a run is one small, idempotent request.
 
 **NSE is never scraped.** Without a licensed source the Indian-market factors are shown as unavailable, Model
 Confidence falls, and the score is withheld when coverage-weighted factor weight is below 35%.

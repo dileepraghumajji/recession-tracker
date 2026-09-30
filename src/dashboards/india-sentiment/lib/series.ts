@@ -39,6 +39,11 @@ const EQUITY_ETF =
   "Split-adjusted USD price with distributions not added back, so it follows the index's price return less the fund's fees, with small timing differences around distributions.";
 const METAL_ETF = "Follows the metal's USD price less the trust's fee; one share is a fraction of an ounce that shrinks slowly with that fee, so use returns, not the price level.";
 const noFreeSource = (why: string) => `Not filled automatically: ${why}. A different index is never substituted. Load it with a licensed provider or the ingestion API.`;
+/** Official series with no source that is both machine-readable and permitted for automated download (checked 2026-09-30). */
+const noAutoSource = (why: string) => `Ingestion only: ${why}. Values are never estimated; push the release with POST /api/india-sentiment/ingest.`;
+const RBI_FILES = "RBI publishes this in releases whose data files (rbidocs.rbi.org.in) are served only after a JavaScript bot challenge, DBIE (data.rbi.org.in) has no public API, and RBI's website terms do not permit automated copying";
+const FBIL_LICENSED = "FBIL benchmarks may be displayed or redistributed only under a paid FBIL licence";
+const CCIL_TERMS = "CCIL's terms forbid automated collection from its website";
 const derived = (key: string, title: string, units: string): SeriesDef => ({ key, title, source: "Computed from ingested option chains", kind: "derived", sourceId: key, frequency: "D", units });
 
 export const INDICES = [
@@ -123,28 +128,39 @@ export const SERIES: SeriesDef[] = [
   ...OPTION_UNDERLYINGS.flatMap(optSeries),
 
   // Currency
-  market("fx:USDINR", "USD/INR (market)", "FBIL / licensed provider", "D", "INR per USD"),
+  market("fx:USDINR", "USD/INR (market)", "FBIL / licensed provider", "D", "INR per USD", noAutoSource(`the FBIL reference rate is fee-liable and ${FBIL_LICENSED}; the Fed H.10 rate (fred:DEXINUS) is used meanwhile`)),
   fred("DEXINUS", "USD/INR (Fed H.10 noon buying rate)", "Board of Governors of the Federal Reserve System", "D", "INR per USD"),
   fred("DTWEXBGS", "Nominal broad US dollar index", "Board of Governors of the Federal Reserve System", "D", "index"),
   fred("TRESEGINM052N", "India total reserves excluding gold", "International Monetary Fund", "M", "USD mn"),
-  manual("rbi:forex_reserves", "India forex reserves (weekly)", "Reserve Bank of India", "W", "USD bn"),
+  manual("rbi:forex_reserves", "India forex reserves (weekly)", "Reserve Bank of India", "W", "USD bn", noAutoSource(`Weekly Statistical Supplement Table 2 (Friday). ${RBI_FILES}; the IMF monthly series (fred:TRESEGINM052N, USD mn) is used meanwhile`)),
 
   // Rates, bonds, liquidity, credit
-  market("gsec:2y", "India 2Y G-Sec yield", "CCIL / FBIL", "D", "%"),
-  market("gsec:5y", "India 5Y G-Sec yield", "CCIL / FBIL", "D", "%"),
-  market("gsec:10y", "India 10Y G-Sec yield", "CCIL / FBIL", "D", "%"),
+  market("gsec:2y", "India 2Y G-Sec yield", "CCIL / FBIL", "D", "%", noAutoSource(`${FBIL_LICENSED} (G-Sec par yield curve) and ${CCIL_TERMS}`)),
+  market("gsec:5y", "India 5Y G-Sec yield", "CCIL / FBIL", "D", "%", noAutoSource(`${FBIL_LICENSED} (G-Sec par yield curve) and ${CCIL_TERMS}`)),
+  market("gsec:10y", "India 10Y G-Sec yield", "CCIL / FBIL", "D", "%", noAutoSource(`${FBIL_LICENSED} (G-Sec par yield curve) and ${CCIL_TERMS}; the OECD monthly yield (fred:INDIRLTLT01STM) is used meanwhile`)),
   fred("INDIRLTLT01STM", "India long-term government bond yield (monthly)", "OECD Main Economic Indicators", "M", "%"),
   fred("INDIR3TIB01STM", "India 3-month interbank rate (monthly)", "OECD Main Economic Indicators", "M", "%"),
-  manual("rbi:repo", "RBI policy repo rate", "Reserve Bank of India", "D", "%"),
-  manual("rbi:call_money", "Weighted average call money rate", "Reserve Bank of India", "D", "%"),
-  manual("rbi:system_liquidity", "System liquidity (net LAF, + = surplus)", "Reserve Bank of India", "D", "₹ Cr"),
-  manual("rbi:govt_cash", "Government cash balance with RBI", "Reserve Bank of India", "W", "₹ Cr"),
-  manual("rbi:cp_3m", "3M commercial paper rate", "Reserve Bank of India / FBIL", "W", "%"),
-  manual("rbi:cd_3m", "3M certificate of deposit rate", "Reserve Bank of India / FBIL", "W", "%"),
-  manual("rbi:bank_credit_yoy", "Scheduled commercial bank credit growth", "Reserve Bank of India", "W", "% YoY"),
-  manual("rbi:deposit_yoy", "Scheduled commercial bank deposit growth", "Reserve Bank of India", "W", "% YoY"),
-  manual("rbi:credit_deposit_ratio", "Credit/deposit ratio", "Reserve Bank of India", "W", "%"),
-  manual("rbi:gnpa", "Gross NPA ratio, scheduled commercial banks", "Reserve Bank of India (FSR)", "Q", "%"),
+  {
+    key: "rbi:repo",
+    title: "RBI policy repo rate",
+    source: "Reserve Bank of India (via BIS policy-rate statistics)",
+    kind: "manual",
+    sourceId: "BIS WS_CBPOL D.IN",
+    frequency: "D",
+    units: "%",
+    url: "https://data.bis.org/topics/CBPOL/BIS%2CWS_CBPOL%2C1.0/D.IN",
+    notes:
+      "Imported daily by /api/cron/india-official from the BIS central bank policy rates (series D.IN, source: Reserve Bank of India; BIS cited as required by its terms), business days from 3 Apr 2001, when the repo rate became the policy rate (BIS shows the Bank Rate before that; it is not used). Stored exactly as BIS publishes it: days without a BIS value are left empty, never filled (BIS has values on every calendar day in 2002–03, and dates the 2019 decisions one day after RBI's announcement, e.g. the 7 Feb 2019 cut on 8 Feb). BIS publishes India with a lag (on 2026-09-30 its last value was for 2026-07-23), so the series goes STALE between updates; a newer RBI decision can be pushed with the ingestion API and is kept until BIS covers that date.",
+  },
+  manual("rbi:call_money", "Weighted average call money rate", "Reserve Bank of India", "D", "%", noAutoSource("RBI's daily Money Market Operations release is HTML only (never scraped) and DBIE has no public API")),
+  manual("rbi:system_liquidity", "System liquidity (net LAF, + = surplus)", "Reserve Bank of India", "D", "₹ Cr", noAutoSource("RBI's daily Money Market Operations release is HTML only (never scraped) and DBIE has no public API. Units: ₹ crore (convert ₹ lakh crore × 100,000)")),
+  manual("rbi:govt_cash", "Government cash balance with RBI", "Reserve Bank of India", "W", "₹ Cr", noAutoSource(`Weekly Statistical Supplement Table 1 (central government deposits with RBI). ${RBI_FILES}`)),
+  manual("rbi:cp_3m", "3M commercial paper rate", "Reserve Bank of India / FBIL", "W", "%", noAutoSource(`${FBIL_LICENSED} (CP curve) and ${RBI_FILES}`)),
+  manual("rbi:cd_3m", "3M certificate of deposit rate", "Reserve Bank of India / FBIL", "W", "%", noAutoSource(`${FBIL_LICENSED} (CD curve) and ${RBI_FILES}`)),
+  manual("rbi:bank_credit_yoy", "Scheduled commercial bank credit growth", "Reserve Bank of India", "W", "% YoY", noAutoSource(`Scheduled Banks' Statement of Position, published fortnightly. ${RBI_FILES}`)),
+  manual("rbi:deposit_yoy", "Scheduled commercial bank deposit growth", "Reserve Bank of India", "W", "% YoY", noAutoSource(`Scheduled Banks' Statement of Position, published fortnightly. ${RBI_FILES}`)),
+  manual("rbi:credit_deposit_ratio", "Credit/deposit ratio", "Reserve Bank of India", "W", "%", noAutoSource(`Scheduled Banks' Statement of Position, published fortnightly. ${RBI_FILES}`)),
+  manual("rbi:gnpa", "Gross NPA ratio, scheduled commercial banks", "Reserve Bank of India (FSR)", "Q", "%", noAutoSource(`Financial Stability Report (half-yearly PDF). ${RBI_FILES}`)),
   market("credit:aaa_spread", "AAA corporate bond spread (3–5Y) over G-Sec", "FIMMDA / CCIL (licensed)", "D", "bps"),
   market("credit:aa_spread", "AA corporate bond spread (3–5Y) over G-Sec", "FIMMDA / CCIL (licensed)", "D", "bps"),
 

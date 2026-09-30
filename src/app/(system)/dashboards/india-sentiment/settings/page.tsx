@@ -151,6 +151,12 @@ export default async function Settings() {
               <strong>Ingestion API</strong>: push series observations and full option chains to <code>POST /api/india-sentiment/ingest</code> (requires <code>ADMIN_TOKEN</code>). Use this for RBI, AMFI,
               MOSPI, SEBI, NSDL/CDSL and Ministry of Finance releases too. Series are merged by date; option chains update the chain view, intraday pressure and the derived daily option series.
             </li>
+            <li>
+              <strong>Official-series job</strong>: the RBI policy repo rate is imported daily from the BIS policy-rate statistics (source: Reserve Bank of India) by <code>/api/cron/india-official</code> or{" "}
+              <code>npm run official</code>. BIS publishes India with a lag of several weeks, so a newer RBI decision can still be pushed through the ingestion API. The other RBI series, G-Sec yields and
+              market USD/INR have no source that is machine-readable and permitted for automated download (RBI data files sit behind a bot challenge; FBIL and CCIL data need a licence); each series&apos;
+              notes say why.
+            </li>
           </ul>
           <p>Option chains: send every strike and expiry with LTP, previous close, volume (contracts), OI, change in OI, IV, previous IV, bid/ask, timestamp and the lot size in force on that date.</p>
           <pre className="overflow-x-auto rounded bg-surface-2 p-2 text-xs">{EXAMPLE}</pre>

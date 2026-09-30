@@ -17,6 +17,7 @@ import { buildSnapshot, optionsOverview, type Snapshot } from "../engine/snapsho
 import { OPTION_UNDERLYINGS, SERIES, SERIES_BY_KEY } from "../series";
 import type { Obs, OptionChainSnapshot, SeriesDef, SeriesMap, SeriesMeta } from "../types";
 import { BREADTH_OUTPUT_KEYS } from "./breadth/compute";
+import { OFFICIAL_IMPORT_KEYS } from "./official";
 import { providerFor, PROVIDERS, type MarketDataProvider, type ProviderStatus } from "./provider";
 import { marketMaybeOpen } from "./providers/dhan";
 import { demoFallbackStore, getStore, type Store } from "./store";
@@ -204,7 +205,13 @@ async function refreshContext(ctx: DataContext): Promise<RefreshReport> {
       const breadthJob = PROVIDERS.some((p) => p.name === "dhan" && p.configured()) && (BREADTH_OUTPUT_KEYS as readonly string[]).includes(d.key);
       skipped.push({
         key: d.key,
-        reason: breadthJob ? "computed from Dhan stock candles by the breadth job (/api/cron/india-breadth)" : d.kind === "market" ? "no market-data provider configured (ingest via API)" : "official release: load via ingestion API",
+        reason: breadthJob
+          ? "computed from Dhan stock candles by the breadth job (/api/cron/india-breadth)"
+          : OFFICIAL_IMPORT_KEYS.includes(d.key)
+            ? "imported by the official-series job (/api/cron/india-official)"
+            : d.kind === "market"
+              ? "no market-data provider configured (ingest via API)"
+              : "official release: load via ingestion API",
       });
       return false;
     });
