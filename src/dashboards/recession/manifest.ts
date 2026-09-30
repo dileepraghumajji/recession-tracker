@@ -10,6 +10,7 @@ const recession: DashboardManifest = {
   basePath: BASE,
   apiBase: API,
   region: "United States",
+  icon: "activity",
   status: "live",
   nav: [
     { path: "", label: "Dashboard" },

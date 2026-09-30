@@ -43,6 +43,8 @@ export interface DashboardManifest {
   apiBase: string;
   region: string;
   status: "live" | "beta";
+  /** Sidebar icon (see ICONS in src/platform/ui/shell/nav-data.ts). */
+  icon?: "activity" | "gauge" | "candlestick" | "globe" | "landmark" | "line-chart";
   nav: DashboardNavItem[];
   /** Footer disclaimer shown on every page of the dashboard. */
   disclaimer: string;

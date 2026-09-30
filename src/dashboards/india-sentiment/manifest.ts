@@ -10,6 +10,7 @@ const india: DashboardManifest = {
   basePath: BASE,
   apiBase: API,
   region: "India",
+  icon: "gauge",
   status: "beta",
   nav: [
     { path: "", label: "Terminal" },

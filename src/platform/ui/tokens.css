@@ -205,3 +205,8 @@
   transition-duration: var(--dur-base);
   transition-timing-function: var(--motion-ease);
 }
+
+/* Drag handles appear only while customising the grid. */
+.tk .tk-grid-editing .tk-drag-handle {
+  display: inline-flex;
+}
