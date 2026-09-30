@@ -67,28 +67,33 @@ refresh it.
 ### 4. Add the routes (Next.js needs them under `src/app`)
 
 ```
-src/app/dashboards/<id>/layout.tsx       ← copy an existing dashboard's layout and change the id
-src/app/dashboards/<id>/page.tsx         ← overview (nav path "")
-src/app/dashboards/<id>/<path>/page.tsx  ← one per nav entry
-src/app/api/<id>/…/route.ts              ← API routes, if any
+src/app/(system)/dashboards/<id>/layout.tsx       ← copy an existing dashboard's layout and change the id
+src/app/(system)/dashboards/<id>/page.tsx         ← overview (nav path "")
+src/app/(system)/dashboards/<id>/<path>/page.tsx  ← one per nav entry
+src/app/api/<id>/…/route.ts                       ← API routes, if any
 ```
 
 ```tsx
-// src/app/dashboards/<id>/layout.tsx
+// src/app/(system)/dashboards/<id>/layout.tsx
 import type { Metadata } from "next";
-import { DashboardShell } from "@/platform/components/DashboardShell";
 import { getDashboard } from "@/dashboards/registry";
+import { DashboardFrame } from "@/platform/ui/shell/dashboard-frame";
 
 const dashboard = getDashboard("<id>");
 export const metadata: Metadata = { title: dashboard.name, description: dashboard.description };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <DashboardShell dashboard={dashboard}>{children}</DashboardShell>;
+  return <DashboardFrame dashboard={dashboard}>{children}</DashboardFrame>;
 }
 ```
 
-The shell gives every dashboard the same title bar, sub-navigation, page width, disclaimer footer, theme and
-demo-mode banner.
+The `(system)` route group wraps every page in the `AppShell` (sidebar with the dashboard's pages, top bar,
+⌘K command menu, display preferences, live-update status, demo-mode banner); `DashboardFrame` adds page tabs on
+small screens and the disclaimer footer. Build pages from the design system — see
+[`.claude/skills/design-system/SKILL.md`](.claude/skills/design-system/SKILL.md) and `/design-system`.
+
+To get the "Updated 3m ago" indicator and automatic page refresh when data changes, add
+`live: { pollSeconds, status }` to the manifest; `status()` must be cheap (data version + last fetch time).
 
 ### 5. Storage (if needed)
 
@@ -107,9 +112,9 @@ DATA_MODE=demo npm run dev         # click through every page
 
 | Need | Use |
 |---|---|
-| Page frame, nav, theme | `DashboardShell`, `NavLinks`, `ThemeToggle` (`src/platform/components`) |
-| UI primitives | `Panel`, `PageHeader`, `StatusTag`, `Pct` (`@/platform/components/ui`) |
-| Line charts | `TimeSeriesChart`, `PeriodSelector` (`@/platform/components/charts/TimeSeriesChart`) — single axis; show "A vs B" as stacked panels, never dual axes |
+| Page frame, nav, theme, live status | `AppShell` (route group layout), `DashboardFrame`, `PageHeader` (`@/platform/ui/shell/*`) |
+| UI primitives and patterns | `@/platform/ui/primitives/*` (Button, Input, Select, Tabs, Menu, Dialog, Tooltip…) and `@/platform/ui/patterns/*` (WidgetShell, StatCard, DataTable, Panel, tableClass, StatusPill…) — catalogue at `/design-system` |
+| Charts | `ChartPanel` (stacked panes, Lightweight Charts) or `TimeSeriesChart` / `PeriodSelector` (`@/platform/ui/patterns/time-series-chart`, Recharts, lazily loaded) — single axis; show "A vs B" as stacked panels, never dual axes |
 | HTTP with retries/backoff, bounded concurrency, key redaction | `@/platform/data/http` |
 | FRED (shared rate limiter) | `@/platform/data/fred` |
 | PostgreSQL pool / TLS config | `@/platform/data/db` |

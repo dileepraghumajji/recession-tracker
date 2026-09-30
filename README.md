@@ -60,11 +60,15 @@ Dashboard-specific variables are documented in each dashboard's README.
 ```
 src/
   app/                         Next.js routes only
-    layout.tsx, page.tsx       product shell and home page
-    dashboards/<id>/…          each dashboard's pages (layout.tsx renders the shared DashboardShell)
+    layout.tsx                 document root (fonts, theme, preferences)
+    (system)/layout.tsx        product shell (AppShell) for every page; (system)/page.tsx is the home page
+    (system)/dashboards/<id>/… each dashboard's pages (layout.tsx renders DashboardFrame)
+    (system)/design-system     design-system reference
     api/<id>/…                 each dashboard's API
     api/cron/refresh           platform cron → every registered dashboard
+    api/live/<id>              live status polled by open pages
   platform/                    shared, dashboard-agnostic code (never imports a dashboard)
+    ui/                        design system: tokens, primitives, patterns, shell ([guide](.claude/skills/design-system/SKILL.md))
   dashboards/
     registry.ts                THE list of dashboards (nav, home page, cron)
     recession/                 dashboard #1 module (manifest, lib, components)

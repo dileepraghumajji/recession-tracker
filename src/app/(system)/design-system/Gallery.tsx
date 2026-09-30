@@ -427,7 +427,7 @@ export function Gallery() {
         </div>
       </Section>
 
-      <Section id="samples" title="Sample screens" description="Two real screens rebuilt on the system with live (demo) data — for approval before the dashboards migrate.">
+      <Section id="samples" title="Sample screens" description="Two India Sentiment screens composed entirely from system patterns (widget grid, virtualised chain table, stacked chart panes).">
         <div className="grid gap-3 md:grid-cols-2">
           {[
             ["/design-system/samples/india-terminal", "India Sentiment · Terminal", "Widget grid (drag / resize / save), hero stats, factor contributions, NIFTY vs sentiment panes, 20 questions."],

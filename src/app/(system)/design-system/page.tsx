@@ -14,7 +14,7 @@ export default function DesignSystemPage() {
         description="Tokens, primitives, patterns and templates for every TerminalK dashboard. Dark-first, dense by default, accessible (WCAG AA), colour-blind-safe market semantics."
         meta={
           <>
-            <Badge tone="accent">v1 · proposal</Badge>
+            <Badge tone="accent">v1</Badge>
             <span>Geist · Tailwind v4 · Radix/shadcn · Lightweight Charts · TanStack Table</span>
           </>
         }

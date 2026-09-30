@@ -6,11 +6,12 @@ product.
 
 ```
                        ┌──────────────────────────── Next.js app ────────────────────────────┐
-  browser  ──────────► │ src/app/layout.tsx  (TerminalK header, dashboard switcher, theme)   │
-                       │ src/app/page.tsx    (home: one card per registered dashboard)       │
-                       │ src/app/dashboards/<id>/layout.tsx → DashboardShell (sub-nav,       │
-                       │                                      disclaimer, page frame)         │
-                       │ src/app/dashboards/<id>/**/page.tsx   src/app/api/<id>/**/route.ts   │
+  browser  ──────────► │ src/app/layout.tsx  (document root: fonts, theme, preferences)       │
+                       │ src/app/(system)/layout.tsx → AppShell (server + client islands),    │
+                       │   home page, /design-system, /api/live/<id> (polled live status)     │
+                       │ src/app/(system)/dashboards/<id>/layout.tsx → DashboardFrame (page   │
+                       │                                     tabs on mobile, disclaimer)      │
+                       │ src/app/(system)/dashboards/<id>/**/page.tsx  src/app/api/<id>/**    │
                        │                │                                   │                 │
                        │                ▼                                   ▼                 │
                        │ src/dashboards/<id>/  (manifest, lib/engine, lib/data, components)   │
@@ -34,6 +35,8 @@ product.
 | `/dashboards/india-sentiment/*` | Dashboard #2 pages |
 | `/api/india-sentiment/*` | Dashboard #2 API |
 | `/api/cron/refresh` | Platform cron: refreshes every registered dashboard |
+| `/api/live/<id>` | Cheap live status (data version, last update) polled by open pages |
+| `/design-system` | Design-system reference and sample screens |
 | `/indicators`, `/rates`, `/api/snapshot`, … | 308 redirects to the recession dashboard (pre-restructure URLs, `next.config.ts`) |
 
 ## Shared concerns (handled once)
@@ -41,9 +44,12 @@ product.
 | Concern | Where |
 |---|---|
 | Branding, navigation, home page | `src/platform/product.ts`, `src/app/layout.tsx`, `src/app/page.tsx`, driven by `src/dashboards/registry.ts` |
-| Consistent page structure | `DashboardShell` — every dashboard layout uses it |
-| Theme / dark mode | CSS tokens in `src/app/globals.css`, `ThemeToggle` (dark default, light opt-in, persisted per browser) |
-| Responsive layout | Tailwind grid utilities; the shell wraps nav rows and tables scroll horizontally inside panels |
+| Consistent page structure | `AppShell` (server-rendered; nav state, drawer, ⌘K menu and preferences are small client islands) and `DashboardFrame` in every dashboard layout |
+| Design system | Tokens on `:root` in `src/platform/ui/tokens.css` (mapped to Tailwind in `globals.css`), primitives/patterns/shell in `src/platform/ui`; guide: `.claude/skills/design-system/SKILL.md`, catalogue: `/design-system`, Storybook |
+| Theme / density / colour scheme | `data-theme`, `data-density`, `data-market`, `data-sidebar` on `<html>`, set before paint (dark default); display menu and ⌘K |
+| Responsive layout | Sidebar becomes a drawer and page tabs below `lg`; container-query widget grid; tables scroll inside panels |
+| Live updates | Manifest `live.status()` → `/api/live/<id>`; the top-bar indicator polls while the tab is visible and re-renders the page only when the data version changes |
+| Performance | Charts (Recharts `.view` modules, Lightweight Charts) load and render only near the viewport, in idle time |
 | Data providers | `src/platform/data/http.ts` (timeouts, retry/backoff on 429/5xx, bounded concurrency, key redaction), `src/platform/data/fred.ts` (one throttle for the whole process) |
 | Persistence | `src/platform/data/db.ts` — one pool, TLS config; each dashboard owns its tables and has an in-memory fallback |
 | Caching | Each dashboard caches derived data by *data version + config hash* (in-process), recomputed after refresh or ingestion |
