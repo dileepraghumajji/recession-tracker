@@ -127,7 +127,7 @@ export const SERIES: SeriesDef[] = [
   market("gsec:5y", "India 5Y G-Sec yield", "CCIL / FBIL", "D", "%"),
   market("gsec:10y", "India 10Y G-Sec yield", "CCIL / FBIL", "D", "%"),
   fred("INDIRLTLT01STM", "India long-term government bond yield (monthly)", "OECD Main Economic Indicators", "M", "%"),
-  fred("IR3TIB01INM156N", "India 3-month interbank rate (monthly)", "OECD Main Economic Indicators", "M", "%"),
+  fred("INDIR3TIB01STM", "India 3-month interbank rate (monthly)", "OECD Main Economic Indicators", "M", "%"),
   manual("rbi:repo", "RBI policy repo rate", "Reserve Bank of India", "D", "%"),
   manual("rbi:call_money", "Weighted average call money rate", "Reserve Bank of India", "D", "%"),
   manual("rbi:system_liquidity", "System liquidity (net LAF, + = surplus)", "Reserve Bank of India", "D", "₹ Cr"),

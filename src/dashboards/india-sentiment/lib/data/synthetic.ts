@@ -265,7 +265,7 @@ export function syntheticSeries(def: SeriesDef): Obs[] {
       return daily(w, k, (i, n) => interp(GSEC10, w.days[i]) - 0.25 - 0.1 * S(i) + 0.04 * n());
     case "fred:INDIRLTLT01STM":
       return monthly(w, k, (i) => interp(GSEC10, w.days[i]) + 0.1 * Math.max(0, -S(i)));
-    case "fred:IR3TIB01INM156N":
+    case "fred:INDIR3TIB01STM":
       return monthly(w, k, (i) => interp(REPO, w.days[i]) + 0.2 - 0.3 * S(i));
     case "rbi:repo":
       return daily(w, k, (i) => Math.round(interp(REPO, w.days[i]) * 4) / 4);
