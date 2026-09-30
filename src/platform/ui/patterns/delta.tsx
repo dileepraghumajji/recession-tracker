@@ -29,11 +29,12 @@ export function Delta({
   const glyph = dir > 0 ? "▲" : dir < 0 ? "▼" : "▶";
   const text = `${value > 0 ? "+" : value < 0 ? "−" : "±"}${Math.abs(value).toFixed(dp)}${suffix}`;
   return (
-    <span className={cn("inline-flex items-center gap-1 whitespace-nowrap tabular-nums", color, className)} aria-label={`${label ? label + " " : ""}${dir > 0 ? "up" : dir < 0 ? "down" : "unchanged"} ${text}`}>
+    <span className={cn("inline-flex items-center gap-1 whitespace-nowrap tabular-nums", color, className)}>
       <span aria-hidden className="text-[0.7em]">
         {glyph}
       </span>
       <span aria-hidden>{text}</span>
+      <span className="sr-only">{`${label ? label + " " : ""}${dir > 0 ? "up" : dir < 0 ? "down" : "unchanged"} ${text}`}</span>
     </span>
   );
 }

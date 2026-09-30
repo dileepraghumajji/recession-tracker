@@ -3,37 +3,21 @@ import { Command } from "cmdk";
 import { ArrowRight, Columns3, LayoutGrid, Moon, Palette, Rows3, RotateCcw, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+
 import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog";
 import { Kbd } from "../primitives/misc";
 import { setPreference } from "../preferences";
+import { LAYOUT_EVENT } from "./events";
 import { DASHBOARD_ICONS } from "./icons";
 import type { NavDashboard } from "./nav-data";
 
-export const LAYOUT_EVENT = "tk-layout";
-
-/** Global ⌘K / Ctrl+K palette: jump to any dashboard page or run an action. */
-export function CommandMenu({ dashboards, extra = [] }: { dashboards: NavDashboard[]; extra?: { href: string; label: string; group: string }[] }) {
-  const [open, setOpen] = useState(false);
+/**
+ * ⌘K / Ctrl+K palette: jump to any dashboard page or run an action.
+ * Loaded lazily by the AppShell on first use (cmdk is not in the initial bundle).
+ */
+export default function CommandMenu({ open, setOpen, dashboards, extra = [] }: { open: boolean; setOpen: (o: boolean) => void; dashboards: NavDashboard[]; extra?: { href: string; label: string; group: string }[] }) {
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName));
-      if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || (e.key === "/" && !typing)) {
-        e.preventDefault();
-        setOpen((o) => !o);
-      }
-    };
-    const onOpen = () => setOpen(true);
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("tk-command", onOpen);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("tk-command", onOpen);
-    };
-  }, []);
 
   const run = (fn: () => void) => {
     setOpen(false);

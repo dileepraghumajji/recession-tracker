@@ -210,3 +210,39 @@
 .tk .tk-grid-editing .tk-drag-handle {
   display: inline-flex;
 }
+
+/*
+ * Default (non-customised) widget grid: pure CSS with container queries so the
+ * breakpoints follow the content width. Geometry matches the interactive grid:
+ * 12px rows + 12px gaps. Below 640px widgets stack at their natural height.
+ */
+.tk .tk-static-grid {
+  container-type: inline-size;
+}
+.tk .tk-grid-cells {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@container (min-width: 640px) {
+  .tk .tk-grid-cells {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-auto-rows: 12px;
+    gap: 12px;
+  }
+  .tk .tk-grid-cell {
+    grid-column: var(--md-col);
+    grid-row: var(--md-row);
+    min-height: 0;
+  }
+}
+@container (min-width: 960px) {
+  .tk .tk-grid-cells {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+  .tk .tk-grid-cell {
+    grid-column: var(--lg-col);
+    grid-row: var(--lg-row);
+  }
+}

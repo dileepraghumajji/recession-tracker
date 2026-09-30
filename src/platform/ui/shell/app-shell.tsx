@@ -9,13 +9,15 @@ import { Button } from "../primitives/button";
 import { Dialog, DialogContent, DialogTitle } from "../primitives/dialog";
 import { Kbd } from "../primitives/misc";
 import { Tooltip, TooltipProvider } from "../primitives/tooltip";
-import { CommandMenu } from "./command-menu";
+import dynamic from "next/dynamic";
+import { COMMAND_EVENT, openCommandMenu } from "./events";
 import { DASHBOARD_ICONS } from "./icons";
 import { Logo } from "./logo";
 import type { NavDashboard } from "./nav-data";
 import { PrefsMenu, ThemeButton } from "./prefs-menu";
 
 const COLLAPSE_KEY = "tk-sidebar-collapsed";
+const CommandMenu = dynamic(() => import("./command-menu"), { ssr: false });
 
 function isActive(path: string, href: string, exact: boolean) {
   return exact ? path === href : path === href || path.startsWith(href + "/");
@@ -109,6 +111,28 @@ function Breadcrumbs({ dashboards }: { dashboards: NavDashboard[] }) {
 export function AppShell({ dashboards, children, banner }: { dashboards: NavDashboard[]; children: ReactNode; banner?: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
+  const [cmdLoaded, setCmdLoaded] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName));
+      if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || (e.key === "/" && !typing)) {
+        e.preventDefault();
+        setCmdLoaded(true);
+        setCmdOpen((o) => !o);
+      }
+    };
+    const onOpen = () => {
+      setCmdLoaded(true);
+      setCmdOpen(true);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener(COMMAND_EVENT, onOpen);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(COMMAND_EVENT, onOpen);
+    };
+  }, []);
   useEffect(() => {
     try {
       setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1");
@@ -145,7 +169,7 @@ export function AppShell({ dashboards, children, banner }: { dashboards: NavDash
             </div>
             <div className={cn("flex items-center border-t border-line p-2", collapsed ? "justify-center" : "justify-between")}>
               {!collapsed && (
-                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("tk-command"))} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted hover:text-ink">
+                <button type="button" onClick={() => openCommandMenu()} className="flex items-center gap-1.5 rounded-md px-2 py-1 text-2xs text-muted hover:text-ink">
                   <Kbd>⌘</Kbd>
                   <Kbd>K</Kbd> commands
                 </button>
@@ -158,7 +182,7 @@ export function AppShell({ dashboards, children, banner }: { dashboards: NavDash
             </div>
           </aside>
           <div className="flex min-w-0 flex-1 flex-col">
-            <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-line bg-[color-mix(in_srgb,var(--page)_85%,transparent)] px-3 backdrop-blur-md sm:px-4">
+            <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-line bg-page px-3 sm:px-4">
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setDrawer(true)} aria-label="Open navigation">
                 <MenuIcon />
               </Button>
@@ -169,7 +193,7 @@ export function AppShell({ dashboards, children, banner }: { dashboards: NavDash
               <div className="ml-auto flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => window.dispatchEvent(new CustomEvent("tk-command"))}
+                  onClick={() => openCommandMenu()}
                   className="hidden h-8 w-64 items-center gap-2 rounded-md border border-line bg-surface px-2.5 text-xs text-muted transition-colors hover:border-line-strong md:flex"
                   aria-label="Open command menu"
                 >
@@ -180,7 +204,7 @@ export function AppShell({ dashboards, children, banner }: { dashboards: NavDash
                     <Kbd>K</Kbd>
                   </span>
                 </button>
-                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => window.dispatchEvent(new CustomEvent("tk-command"))} aria-label="Open command menu">
+                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => openCommandMenu()} aria-label="Open command menu">
                   <Search />
                 </Button>
                 <PrefsMenu />
@@ -203,7 +227,9 @@ export function AppShell({ dashboards, children, banner }: { dashboards: NavDash
             </div>
           </DialogContent>
         </Dialog>
-        <CommandMenu dashboards={dashboards} extra={[{ href: "/design-system", label: "Design system", group: "System" }, { href: "/", label: "Overview", group: "Product" }]} />
+        {cmdLoaded && (
+          <CommandMenu open={cmdOpen} setOpen={setCmdOpen} dashboards={dashboards} extra={[{ href: "/design-system", label: "Design system", group: "System" }, { href: "/", label: "Overview", group: "Product" }]} />
+        )}
       </div>
     </TooltipProvider>
   );

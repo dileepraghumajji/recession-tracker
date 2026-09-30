@@ -104,7 +104,7 @@ export function OptionChainScreen({ initial, expiriesSummary, shift, initialIntr
       { id: "cDoi", header: "ΔOI", accessorFn: (r) => r.call?.changeInOi ?? 0, meta: { numeric: true, heat: callHeat, heatColor: "series-2" }, cell: ({ row: { original: r } }) => <Delta value={r.call?.changeInOi ?? null} dp={0} goodWhen="none" /> },
       { id: "cPrem", header: "Prem ₹Cr", accessorFn: (r) => r.call?.premium ?? 0, meta: { numeric: true, heat: callHeat, heatColor: "series-2" }, cell: ({ row: { original: r } }) => mark(hl?.maxPremium?.strike === r.strike && hl.maxPremium.type === "CE", r.call ? cr(r.call.premium) : "—") },
       { id: "cIv", header: "IV", accessorFn: (r) => r.call?.iv ?? 0, meta: { numeric: true, heat: callHeat, heatColor: "series-2" }, cell: ({ row: { original: r } }) => nf(r.call?.iv, 1) },
-      { id: "cAct", header: "", enableSorting: false, meta: { align: "right" }, cell: ({ row: { original: r } }) => <ActivityTag s={r.call} /> },
+      { id: "cAct", header: () => <span className="sr-only">Call activity</span>, enableSorting: false, meta: { align: "right" }, cell: ({ row: { original: r } }) => <ActivityTag s={r.call} /> },
       {
         id: "strike",
         header: "Strike",
@@ -114,7 +114,7 @@ export function OptionChainScreen({ initial, expiriesSummary, shift, initialIntr
           <span className={cn("inline-block min-w-16 rounded px-1.5 py-0.5 font-mono text-xs tabular-nums", r.strike === a?.atmStrike ? "bg-accent text-accent-fg" : "bg-surface-2 text-ink")}>{r.strike}</span>
         ),
       },
-      { id: "pAct", header: "", enableSorting: false, cell: ({ row: { original: r } }) => <ActivityTag s={r.put} /> },
+      { id: "pAct", header: () => <span className="sr-only">Put activity</span>, enableSorting: false, cell: ({ row: { original: r } }) => <ActivityTag s={r.put} /> },
       { id: "pIv", header: "IV", accessorFn: (r) => r.put?.iv ?? 0, meta: { numeric: true, heat: putHeat, heatColor: "series-1" }, cell: ({ row: { original: r } }) => nf(r.put?.iv, 1) },
       { id: "pPrem", header: "Prem ₹Cr", accessorFn: (r) => r.put?.premium ?? 0, meta: { numeric: true, heat: putHeat, heatColor: "series-1" }, cell: ({ row: { original: r } }) => mark(hl?.maxPremium?.strike === r.strike && hl.maxPremium.type === "PE", r.put ? cr(r.put.premium) : "—") },
       { id: "pDoi", header: "ΔOI", accessorFn: (r) => r.put?.changeInOi ?? 0, meta: { numeric: true, heat: putHeat, heatColor: "series-1" }, cell: ({ row: { original: r } }) => <Delta value={r.put?.changeInOi ?? null} dp={0} goodWhen="none" /> },

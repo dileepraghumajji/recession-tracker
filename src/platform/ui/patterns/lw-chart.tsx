@@ -79,6 +79,8 @@ export default function LwChart({ panes, height, timeOffsetSec = 0, onHover }: L
       handleScale: { axisPressedMouseMove: true },
     });
     chart.current = c;
+    // The library lays out panes with a <table>; mark it presentational for assistive tech.
+    node.querySelectorAll("table").forEach((t) => t.setAttribute("role", "presentation"));
     series.current = [];
     panes.forEach((pane, pi) => {
       for (const spec of pane.series) {

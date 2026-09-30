@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { cn } from "../cn";
 import type { ChartPane, ChartSeriesSpec } from "./chart-types";
 import { EmptyState } from "./empty-state";
@@ -26,6 +26,17 @@ function fmt(v: number | null | undefined, f: ChartSeriesSpec["format"]) {
  */
 export function ChartPanel({ panes, height = 360, timeOffsetSec, header, className, emptyText = "No data for this period." }: { panes: ChartPane[]; height?: number; timeOffsetSec?: number; header?: ReactNode; className?: string; emptyText?: string }) {
   const [hover, setHover] = useState<{ vals: Record<string, number | null>; time: string } | null>(null);
+  // Load and render the chart library only once the panel approaches the viewport.
+  const box = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = box.current;
+    if (!el || visible) return;
+    if (typeof IntersectionObserver === "undefined") return setVisible(true);
+    const io = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && setVisible(true), { rootMargin: "200px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visible]);
   const all = panes.flatMap((p) => p.series);
   const hasData = all.some((s) => s.data.some((d) => d.value !== null));
   const last = useMemo(() => Object.fromEntries(all.map((s) => [s.id, [...s.data].reverse().find((d) => d.value !== null)?.value ?? null])), [all]);
@@ -50,8 +61,8 @@ export function ChartPanel({ panes, height = 360, timeOffsetSec, header, classNa
         <span className="ml-auto text-2xs text-muted tabular-nums">{hover ? hover.time.replace("T", " ").slice(0, 16) : "latest"}</span>
       </div>
       {hasData ? (
-        <div role="img" aria-label={`Chart: ${all.map((s) => s.label).join(", ")}`}>
-          <LwChart panes={panes} height={height} timeOffsetSec={timeOffsetSec} onHover={(vals, time) => setHover(vals && time ? { vals, time } : null)} />
+        <div ref={box} role="img" aria-label={`Chart: ${all.map((s) => s.label).join(", ")}`} style={{ minHeight: height }}>
+          {visible ? <LwChart panes={panes} height={height} timeOffsetSec={timeOffsetSec} onHover={(vals, time) => setHover(vals && time ? { vals, time } : null)} /> : <ChartSkeleton height={height} />}
         </div>
       ) : (
         <EmptyState title={emptyText} />

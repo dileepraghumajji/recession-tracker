@@ -58,7 +58,7 @@ export function HeroWidget({ s, spark }: { s: Snapshot; spark: number[] }) {
             {s.band ? (
               <Badge tone={tone === "up" ? "up" : tone === "down" ? "down" : "neutral"} className="px-2 py-0.5 text-xs">
                 <span aria-hidden>{s.band.emoji}</span> {s.band.label.toUpperCase()}
-                {s.band.label.toUpperCase() !== s.band.cls && <span className="opacity-70"> · {s.band.cls}</span>}
+                {s.band.label.toUpperCase() !== s.band.cls && <span> · {s.band.cls}</span>}
               </Badge>
             ) : (
               <Badge>INSUFFICIENT DATA</Badge>
@@ -247,7 +247,8 @@ export function QuestionsWidget({ s }: { s: Snapshot }) {
         {s.answers.map((a) => (
           <li key={a.n} className="min-w-0">
             <div className="flex items-center gap-1.5 text-2xs font-medium uppercase tracking-[0.05em] text-muted">
-              <span className="size-1.5 shrink-0 rounded-full" style={{ background: dot[a.tone] }} aria-label={word[a.tone]} />
+              <span className="size-1.5 shrink-0 rounded-full" style={{ background: dot[a.tone] }} aria-hidden />
+              <span className="sr-only">{word[a.tone]}:</span>
               {a.n}. {a.q}
             </div>
             <p className="mt-0.5 text-xs leading-snug text-ink">{a.a}</p>

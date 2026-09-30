@@ -27,8 +27,10 @@ export const metadata: Metadata = { title: "Sample · India Sentiment Terminal" 
 export default async function IndiaTerminalSample() {
   const overrides = await configOverridesFromCookie();
   const [s, { history }, series] = await Promise.all([getSnapshot(overrides), getHistory(overrides), getSeriesMap()]);
-  const sentiment = history.filter((h) => h.score !== null).map((h) => ({ time: h.date, value: h.score as number }));
-  const nifty = (series["idx:NIFTY50"]?.obs ?? []).map((o) => ({ time: o.date, value: o.value }));
+  // History is already weekly beyond the last ~400 sessions; thin NIFTY the same way to keep the payload small.
+  const sentiment = history.filter((h) => h.score !== null).map((h) => ({ time: h.date, value: Math.round((h.score as number) * 10) / 10 }));
+  const allNifty = series["idx:NIFTY50"]?.obs ?? [];
+  const nifty = allNifty.filter((_, i) => i >= allNifty.length - 400 || (allNifty.length - 1 - i) % 5 === 0).map((o) => ({ time: o.date, value: Math.round(o.value * 100) / 100 }));
   const spark = sentiment.slice(-60).map((p) => p.value);
 
   return (
