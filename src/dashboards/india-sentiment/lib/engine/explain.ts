@@ -155,7 +155,7 @@ export function narrative(args: {
   if (!monitor.length) monitor.push("No active divergences or threshold proximity.");
   return {
     whatChanged,
-    whyItMatters,
+    whyItMatters: whyItMatters.length ? whyItMatters : ["No factor groups are currently contributing."],
     confirms: confirms.length ? confirms.slice(0, 5) : ["No factor groups strongly confirm the reading."],
     contradicts: contradicts.length ? contradicts.slice(0, 5) : ["No factor groups contradict the reading."],
     monitor: monitor.slice(0, 6),

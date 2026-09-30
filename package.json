@@ -1,8 +1,8 @@
 {
-  "name": "macro-recession-stress-monitor",
+  "name": "terminalk",
   "version": "0.1.0",
   "private": true,
-  "description": "Transparent macro and financial-market stress dashboard (analytical tool, not a recession predictor).",
+  "description": "TerminalK: a product of transparent, explainable market and macro dashboards (analytical tools, not investment advice).",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
