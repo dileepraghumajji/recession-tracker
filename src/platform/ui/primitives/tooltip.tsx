@@ -19,7 +19,7 @@ export function Tooltip({ content, children, side = "top", className }: { conten
           side={side}
           sideOffset={6}
           className={cn(
-            "tk z-50 max-w-xs rounded-md bg-surface-3 px-2 py-1 text-xs text-ink shadow-pop data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95",
+            "z-50 max-w-xs rounded-md bg-surface-3 px-2 py-1 text-xs text-ink shadow-pop data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95",
             className,
           )}
         >

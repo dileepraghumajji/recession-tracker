@@ -3,7 +3,7 @@ import "../src/app/globals.css";
 import "./fonts.css";
 import { TooltipProvider } from "../src/platform/ui/primitives/tooltip";
 
-/** Every story renders inside the `.tk` token scope; theme and density are toolbar globals. */
+/** Tokens live on :root; theme, density and market scheme are toolbar globals set on <html>. */
 const preview: Preview = {
   globalTypes: {
     theme: { description: "Theme", toolbar: { title: "Theme", icon: "mirror", items: ["dark", "light"], dynamicTitle: true } },
@@ -20,7 +20,7 @@ const preview: Preview = {
       root.dataset.market = ctx.globals.market;
       return (
         <TooltipProvider>
-          <div className="tk min-h-screen p-6">
+          <div className="min-h-screen bg-page p-6 text-ink">
             <Story />
           </div>
         </TooltipProvider>

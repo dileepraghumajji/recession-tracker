@@ -12,10 +12,10 @@ export const DialogDescription = D.Description;
 export function DialogContent({ className, children, hideClose, side, ...props }: React.ComponentProps<typeof D.Content> & { hideClose?: boolean; side?: "left" }) {
   return (
     <D.Portal>
-      <D.Overlay className="tk fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0" style={{ background: "rgb(0 0 0 / 0.5)" }} />
+      <D.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0" style={{ background: "rgb(0 0 0 / 0.5)" }} />
       <D.Content
         className={cn(
-          "tk fixed z-50 border border-line bg-surface shadow-pop focus:outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0",
+          "fixed z-50 border border-line bg-surface shadow-pop focus:outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0",
           side === "left"
             ? "inset-y-0 left-0 w-72 data-[state=open]:slide-in-from-left"
             : "left-1/2 top-[12vh] w-[min(640px,calc(100vw-2rem))] -translate-x-1/2 rounded-xl data-[state=open]:zoom-in-95",

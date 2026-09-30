@@ -21,7 +21,7 @@ export function Select({ value, onChange, options, label, className, placeholder
         </S.Icon>
       </S.Trigger>
       <S.Portal>
-        <S.Content position="popper" sideOffset={4} className="tk z-50 max-h-[min(24rem,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-line bg-surface shadow-pop animate-in fade-in-0 zoom-in-95">
+        <S.Content position="popper" sideOffset={4} className="z-50 max-h-[min(24rem,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-line bg-surface shadow-pop animate-in fade-in-0 zoom-in-95">
           <S.Viewport className="p-1">
             {groups.map((g) => (
               <S.Group key={g}>

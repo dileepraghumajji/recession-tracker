@@ -2,16 +2,17 @@
  * TerminalK design tokens.
  *
  * Dark-first. Every value is a semantic role; components never use raw hex.
- * Scope: everything inside `.tk` (the new shell). During the migration the
- * legacy dashboards keep the root values from globals.css; once migrated the
- * `.tk` values become the root values.
+ * Defined on :root so every page, portal (dialogs, menus, tooltips) and chart
+ * reads the same values. Theme, market scheme and density are attributes on
+ * <html> (data-theme, data-market, data-density).
  *
  * Contrast (WCAG): all text roles >= 4.5:1 on surface and surface-2 in both
  * themes. Market up/down pairs pass the colour-blind separation check
  * (deutan ΔE >= 11 dark, >= 12 light) and are always paired with ▲/▼ + sign.
  */
 
-.tk {
+:root,
+:root[data-theme="dark"] {
   color-scheme: dark;
   /* ── neutrals ───────────────────────────────────────────── */
   --page: #09090b; /* app canvas */
@@ -68,16 +69,20 @@
   --dur-fast: 120ms;
   --dur-base: 180ms;
   --dur-slow: 260ms;
-
-  background: var(--page);
-  color: var(--ink);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: var(--text-body);
-  -webkit-font-smoothing: antialiased;
-  --tk-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-:root[data-theme="light"] .tk {
+html,
+body {
+  background: var(--page);
+  color: var(--ink);
+}
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+:root[data-theme="light"] {
   color-scheme: light;
   --page: #fafafa;
   --surface: #ffffff;
@@ -116,7 +121,7 @@
 }
 
 /* Colour-blind-friendly market scheme (blue up / orange down), opt-in. */
-:root[data-market="blue-orange"] .tk {
+:root[data-market="blue-orange"] {
   --up: #4a93e6;
   --down: #d9761c;
   --up-fg: #4a93e6;
@@ -124,7 +129,7 @@
   --up-subtle: rgba(74, 147, 230, 0.16);
   --down-subtle: rgba(217, 118, 28, 0.16);
 }
-:root[data-theme="light"][data-market="blue-orange"] .tk {
+:root[data-theme="light"][data-market="blue-orange"] {
   --up: #1f6fcf;
   --down: #c9650a;
   --up-fg: #1f6fcf;
@@ -134,14 +139,14 @@
 }
 
 /* Density modes. */
-:root[data-density="compact"] .tk {
+:root[data-density="compact"] {
   --row-h: 26px;
   --control-h: 28px;
   --widget-pad: 12px;
   --gap: 8px;
   --text-body: 12px;
 }
-:root[data-density="spacious"] .tk {
+:root[data-density="spacious"] {
   --row-h: 38px;
   --control-h: 36px;
   --widget-pad: 20px;
@@ -149,17 +154,17 @@
   --text-body: 14px;
 }
 
-.tk ::selection {
+::selection {
   background: var(--accent-subtle);
 }
-.tk :focus-visible {
+:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
 /* Skeleton shimmer (static when reduced motion is requested). */
-.tk .tk-shimmer {
+.tk-shimmer {
   background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
   background-size: 200% 100%;
   animation: tk-shimmer 1.4s linear infinite;
@@ -173,41 +178,41 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .tk .tk-shimmer {
+  .tk-shimmer {
     animation: none;
   }
-  .tk *,
-  .tk *::before,
-  .tk *::after {
+  *,
+  *::before,
+  *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
 }
 
-/* Thin, theme-aware scrollbars inside the shell. */
-.tk * {
+/* Thin, theme-aware scrollbars. */
+* {
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
 }
 
 /* Widget grid chrome (react-grid-layout). */
-.tk .react-grid-item.react-grid-placeholder {
+.react-grid-item.react-grid-placeholder {
   background: var(--accent-subtle);
   border: 1px dashed var(--accent);
   border-radius: 10px;
   opacity: 1;
 }
-.tk .react-grid-item > .react-resizable-handle::after {
+.react-grid-item > .react-resizable-handle::after {
   border-color: var(--muted);
 }
-.tk .react-grid-item {
+.react-grid-item {
   transition-property: transform, width, height;
   transition-duration: var(--dur-base);
   transition-timing-function: var(--motion-ease);
 }
 
 /* Drag handles appear only while customising the grid. */
-.tk .tk-grid-editing .tk-drag-handle {
+.tk-grid-editing .tk-drag-handle {
   display: inline-flex;
 }
 
@@ -216,32 +221,32 @@
  * breakpoints follow the content width. Geometry matches the interactive grid:
  * 12px rows + 12px gaps. Below 640px widgets stack at their natural height.
  */
-.tk .tk-static-grid {
+.tk-static-grid {
   container-type: inline-size;
 }
-.tk .tk-grid-cells {
+.tk-grid-cells {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 @container (min-width: 640px) {
-  .tk .tk-grid-cells {
+  .tk-grid-cells {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
     grid-auto-rows: 12px;
     gap: 12px;
   }
-  .tk .tk-grid-cell {
+  .tk-grid-cell {
     grid-column: var(--md-col);
     grid-row: var(--md-row);
     min-height: 0;
   }
 }
 @container (min-width: 960px) {
-  .tk .tk-grid-cells {
+  .tk-grid-cells {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }
-  .tk .tk-grid-cell {
+  .tk-grid-cell {
     grid-column: var(--lg-col);
     grid-row: var(--lg-row);
   }

@@ -9,7 +9,7 @@ export const MenuTrigger = M.Trigger;
 export function MenuContent({ className, align = "end", ...props }: React.ComponentProps<typeof M.Content>) {
   return (
     <M.Portal>
-      <M.Content align={align} sideOffset={6} className={cn("tk z-50 min-w-44 rounded-lg border border-line bg-surface p-1 shadow-pop animate-in fade-in-0 zoom-in-95", className)} {...props} />
+      <M.Content align={align} sideOffset={6} className={cn("z-50 min-w-44 rounded-lg border border-line bg-surface p-1 shadow-pop animate-in fade-in-0 zoom-in-95", className)} {...props} />
     </M.Portal>
   );
 }

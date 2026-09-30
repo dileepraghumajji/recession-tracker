@@ -152,7 +152,7 @@ export function AppShell({ dashboards, children, banner }: { dashboards: NavDash
   };
   return (
     <TooltipProvider>
-      <div className="tk flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col">
         <a href="#main" className="sr-only z-50 rounded bg-accent px-3 py-2 text-accent-fg focus:not-sr-only focus:fixed focus:left-3 focus:top-3">
           Skip to content
         </a>
