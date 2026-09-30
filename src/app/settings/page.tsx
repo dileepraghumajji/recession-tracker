@@ -1,10 +1,10 @@
-import { environmentStatus, getSnapshot } from "@/lib/data/service";
-import { getStore } from "@/lib/data/store";
-import { SERIES } from "@/lib/series-catalog";
-import { DEFAULT_CONFIG, resolveConfig } from "@/lib/model-config";
-import { modelOverridesFromCookie } from "@/lib/server-config";
-import { fmtDate } from "@/lib/format";
-import { PageHeader, Panel } from "@/components/ui";
+import { environmentStatus, getSnapshot } from "@/dashboards/recession/lib/data/service";
+import { getStore } from "@/dashboards/recession/lib/data/store";
+import { SERIES } from "@/dashboards/recession/lib/series-catalog";
+import { DEFAULT_CONFIG, resolveConfig } from "@/dashboards/recession/lib/model-config";
+import { modelOverridesFromCookie } from "@/dashboards/recession/lib/server-config";
+import { fmtDate } from "@/dashboards/recession/lib/format";
+import { PageHeader, Panel } from "@/dashboards/recession/components/ui";
 import { WeightsEditor } from "./WeightsEditor";
 
 export const dynamic = "force-dynamic";

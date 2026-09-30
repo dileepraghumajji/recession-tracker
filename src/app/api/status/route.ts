@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { environmentStatus } from "@/lib/data/service";
-import { getStore } from "@/lib/data/store";
-import { SERIES } from "@/lib/series-catalog";
-import { errorResponse } from "@/lib/api-utils";
+import { environmentStatus } from "@/dashboards/recession/lib/data/service";
+import { getStore } from "@/dashboards/recession/lib/data/store";
+import { SERIES } from "@/dashboards/recession/lib/series-catalog";
+import { errorResponse } from "@/dashboards/recession/lib/api-utils";
 
 export const dynamic = "force-dynamic";
 

@@ -1,10 +1,10 @@
-import { getPrepared, getSnapshot } from "@/lib/data/service";
-import { modelOverridesFromCookie } from "@/lib/server-config";
-import { resolveConfig } from "@/lib/model-config";
-import { fmtNum, fmtValue } from "@/lib/format";
-import { IndicatorLink, PageHeader, Panel, SignalBadge, StatusTag, TrendArrow } from "@/components/ui";
-import { correlationCheck } from "@/lib/engine/correlation";
-import type { CompositeScore, IndicatorReading } from "@/lib/types";
+import { getPrepared, getSnapshot } from "@/dashboards/recession/lib/data/service";
+import { modelOverridesFromCookie } from "@/dashboards/recession/lib/server-config";
+import { resolveConfig } from "@/dashboards/recession/lib/model-config";
+import { fmtNum, fmtValue } from "@/dashboards/recession/lib/format";
+import { IndicatorLink, PageHeader, Panel, SignalBadge, StatusTag, TrendArrow } from "@/dashboards/recession/components/ui";
+import { correlationCheck } from "@/dashboards/recession/lib/engine/correlation";
+import type { CompositeScore, IndicatorReading } from "@/dashboards/recession/lib/types";
 
 export const dynamic = "force-dynamic";
 

@@ -4,7 +4,7 @@
  *   30 22 * * *  cd /app && npm run refresh
  * (Vercel deployments use vercel.json -> /api/cron/refresh instead.)
  */
-import { refreshAll } from "../src/lib/data/service";
+import { refreshAll } from "../src/dashboards/recession/lib/data/service";
 
 refreshAll()
   .then((r) => {

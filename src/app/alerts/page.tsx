@@ -1,7 +1,7 @@
-import { PageHeader } from "@/components/ui";
+import { PageHeader } from "@/dashboards/recession/components/ui";
 import { AlertsClient } from "./AlertsClient";
-import { ALERT_PRESETS } from "@/lib/alerts";
-import { INDICATORS } from "@/lib/indicators";
+import { ALERT_PRESETS } from "@/dashboards/recession/lib/alerts";
+import { INDICATORS } from "@/dashboards/recession/lib/indicators";
 
 export const dynamic = "force-dynamic";
 

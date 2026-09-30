@@ -1,10 +1,10 @@
-import { getHistorical } from "@/lib/data/service";
-import { comparePeriods, KEY_INDICATORS } from "@/lib/engine/historical";
-import { modelOverridesFromCookie } from "@/lib/server-config";
-import { INDICATOR_BY_ID } from "@/lib/indicators";
-import { fmtNum, fmtValue } from "@/lib/format";
-import { PageHeader, Panel } from "@/components/ui";
-import { DemoNotice } from "@/components/DemoNotice";
+import { getHistorical } from "@/dashboards/recession/lib/data/service";
+import { comparePeriods, KEY_INDICATORS } from "@/dashboards/recession/lib/engine/historical";
+import { modelOverridesFromCookie } from "@/dashboards/recession/lib/server-config";
+import { INDICATOR_BY_ID } from "@/dashboards/recession/lib/indicators";
+import { fmtNum, fmtValue } from "@/dashboards/recession/lib/format";
+import { PageHeader, Panel } from "@/dashboards/recession/components/ui";
+import { DemoNotice } from "@/dashboards/recession/components/DemoNotice";
 
 export const dynamic = "force-dynamic";
 

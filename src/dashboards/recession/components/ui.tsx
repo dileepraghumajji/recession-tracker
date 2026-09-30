@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { SIGNAL_META, TREND_META } from "@/lib/format";
-import type { DataStatus, Signal, Trend } from "@/lib/types";
+import { SIGNAL_META, TREND_META } from "@/dashboards/recession/lib/format";
+import type { DataStatus, Signal, Trend } from "@/dashboards/recession/lib/types";
 
 export function Panel({ title, right, children, className = "" }: { title?: ReactNode; right?: ReactNode; children: ReactNode; className?: string }) {
   return (

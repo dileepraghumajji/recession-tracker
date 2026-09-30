@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { SERIES_BY_KEY } from "@/lib/series-catalog";
-import { getStore } from "@/lib/data/store";
-import { checkAdmin, errorResponse } from "@/lib/api-utils";
-import { sortAndClean } from "@/lib/timeseries";
+import { SERIES_BY_KEY } from "@/dashboards/recession/lib/series-catalog";
+import { getStore } from "@/dashboards/recession/lib/data/store";
+import { checkAdmin, errorResponse } from "@/dashboards/recession/lib/api-utils";
+import { sortAndClean } from "@/dashboards/recession/lib/timeseries";
 
 export const dynamic = "force-dynamic";
 

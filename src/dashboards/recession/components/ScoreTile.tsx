@@ -1,5 +1,5 @@
 import { SignalBadge } from "./ui";
-import type { CompositeScore } from "@/lib/types";
+import type { CompositeScore } from "@/dashboards/recession/lib/types";
 
 export function ScoreTile({
   score,

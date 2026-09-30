@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { Nav } from "@/components/Nav";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { Nav } from "@/dashboards/recession/components/Nav";
+import { ThemeToggle } from "@/dashboards/recession/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Macro Recession Stress Monitor",

@@ -1,9 +1,9 @@
-import { getSnapshot } from "@/lib/data/service";
-import { modelOverridesFromCookie } from "@/lib/server-config";
-import { fmtNum, fmtSigned } from "@/lib/format";
-import { IndicatorLink, PageHeader, Panel } from "@/components/ui";
-import { CurveChart } from "@/components/charts/CurveChart";
-import { IndicatorChart } from "@/components/charts/IndicatorChart";
+import { getSnapshot } from "@/dashboards/recession/lib/data/service";
+import { modelOverridesFromCookie } from "@/dashboards/recession/lib/server-config";
+import { fmtNum, fmtSigned } from "@/dashboards/recession/lib/format";
+import { IndicatorLink, PageHeader, Panel } from "@/dashboards/recession/components/ui";
+import { CurveChart } from "@/dashboards/recession/components/charts/CurveChart";
+import { IndicatorChart } from "@/dashboards/recession/components/charts/IndicatorChart";
 
 export const dynamic = "force-dynamic";
 

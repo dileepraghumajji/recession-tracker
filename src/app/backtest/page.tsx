@@ -1,12 +1,12 @@
-import { getHistorical } from "@/lib/data/service";
-import { runBacktest } from "@/lib/engine/historical";
-import { modelOverridesFromCookie } from "@/lib/server-config";
-import { parseBacktestParams } from "@/lib/backtest-params";
-import { fmtNum } from "@/lib/format";
-import { PageHeader, Panel } from "@/components/ui";
-import { DemoNotice } from "@/components/DemoNotice";
-import { EventStudyChart } from "@/components/charts/EventStudyChart";
-import { TimeSeriesChart } from "@/components/charts/TimeSeriesChart";
+import { getHistorical } from "@/dashboards/recession/lib/data/service";
+import { runBacktest } from "@/dashboards/recession/lib/engine/historical";
+import { modelOverridesFromCookie } from "@/dashboards/recession/lib/server-config";
+import { parseBacktestParams } from "@/dashboards/recession/lib/backtest-params";
+import { fmtNum } from "@/dashboards/recession/lib/format";
+import { PageHeader, Panel } from "@/dashboards/recession/components/ui";
+import { DemoNotice } from "@/dashboards/recession/components/DemoNotice";
+import { EventStudyChart } from "@/dashboards/recession/components/charts/EventStudyChart";
+import { TimeSeriesChart } from "@/dashboards/recession/components/charts/TimeSeriesChart";
 
 export const dynamic = "force-dynamic";
 

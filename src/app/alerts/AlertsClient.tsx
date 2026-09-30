@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import type { AlertRule } from "@/lib/alerts";
+import type { AlertRule } from "@/dashboards/recession/lib/alerts";
 
 interface AlertRow {
   id: string;

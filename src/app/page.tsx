@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { getSnapshot } from "@/lib/data/service";
-import { modelOverridesFromCookie } from "@/lib/server-config";
-import { ScoreTile } from "@/components/ScoreTile";
-import { IndicatorLink, Panel, SignalBadge } from "@/components/ui";
-import { ScoreHistoryChart } from "@/components/charts/ScoreHistoryChart";
-import { fmtDate, fmtNum, fmtSigned } from "@/lib/format";
+import { getSnapshot } from "@/dashboards/recession/lib/data/service";
+import { modelOverridesFromCookie } from "@/dashboards/recession/lib/server-config";
+import { ScoreTile } from "@/dashboards/recession/components/ScoreTile";
+import { IndicatorLink, Panel, SignalBadge } from "@/dashboards/recession/components/ui";
+import { ScoreHistoryChart } from "@/dashboards/recession/components/charts/ScoreHistoryChart";
+import { fmtDate, fmtNum, fmtSigned } from "@/dashboards/recession/lib/format";
 
 export const dynamic = "force-dynamic";
 

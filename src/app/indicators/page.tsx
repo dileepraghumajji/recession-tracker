@@ -1,8 +1,8 @@
-import { getSnapshot } from "@/lib/data/service";
-import { modelOverridesFromCookie } from "@/lib/server-config";
-import { GROUPS } from "@/lib/indicators";
-import { fmtChange, fmtNum, fmtValue } from "@/lib/format";
-import { IndicatorLink, PageHeader, Panel, SignalBadge, StatusTag, TrendArrow } from "@/components/ui";
+import { getSnapshot } from "@/dashboards/recession/lib/data/service";
+import { modelOverridesFromCookie } from "@/dashboards/recession/lib/server-config";
+import { GROUPS } from "@/dashboards/recession/lib/indicators";
+import { fmtChange, fmtNum, fmtValue } from "@/dashboards/recession/lib/format";
+import { IndicatorLink, PageHeader, Panel, SignalBadge, StatusTag, TrendArrow } from "@/dashboards/recession/components/ui";
 
 export const dynamic = "force-dynamic";
 

@@ -5,7 +5,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
-import { sslConfig } from "../src/lib/data/store";
+import { sslConfig } from "../src/dashboards/recession/lib/data/store";
 
 async function main() {
   const url = process.env.DATABASE_URL;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getSnapshot } from "@/lib/data/service";
-import { errorResponse, rateLimit } from "@/lib/api-utils";
+import { getSnapshot } from "@/dashboards/recession/lib/data/service";
+import { errorResponse, rateLimit } from "@/dashboards/recession/lib/api-utils";
 
 export const dynamic = "force-dynamic";
 

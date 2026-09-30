@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSnapshot } from "@/lib/data/service";
-import { modelOverridesFromCookie } from "@/lib/server-config";
-import { INDICATOR_BY_ID } from "@/lib/indicators";
-import { fmtChange, fmtDate, fmtNum, fmtValue } from "@/lib/format";
-import { resolveConfig } from "@/lib/model-config";
-import { PageHeader, Panel, SignalBadge, StatusTag, TrendArrow } from "@/components/ui";
-import { IndicatorChart } from "@/components/charts/IndicatorChart";
-import type { RefLine } from "@/components/charts/TimeSeriesChart";
-import { groupLabel } from "@/lib/engine/analyze";
+import { getSnapshot } from "@/dashboards/recession/lib/data/service";
+import { modelOverridesFromCookie } from "@/dashboards/recession/lib/server-config";
+import { INDICATOR_BY_ID } from "@/dashboards/recession/lib/indicators";
+import { fmtChange, fmtDate, fmtNum, fmtValue } from "@/dashboards/recession/lib/format";
+import { resolveConfig } from "@/dashboards/recession/lib/model-config";
+import { PageHeader, Panel, SignalBadge, StatusTag, TrendArrow } from "@/dashboards/recession/components/ui";
+import { IndicatorChart } from "@/dashboards/recession/components/charts/IndicatorChart";
+import type { RefLine } from "@/dashboards/recession/components/charts/TimeSeriesChart";
+import { groupLabel } from "@/dashboards/recession/lib/engine/analyze";
 
 export const dynamic = "force-dynamic";
 

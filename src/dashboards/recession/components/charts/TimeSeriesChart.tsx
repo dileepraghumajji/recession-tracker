@@ -1,6 +1,6 @@
 "use client";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { NBER_RECESSIONS } from "@/lib/nber";
+import { NBER_RECESSIONS } from "@/dashboards/recession/lib/nber";
 
 export interface ChartSeries {
   key: string;
