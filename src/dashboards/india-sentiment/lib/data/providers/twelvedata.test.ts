@@ -8,7 +8,8 @@ import { resetTwelveDataThrottle } from "@/platform/data/twelvedata";
 import { TWELVE_DATA_SERIES, twelveDataProvider } from "./twelvedata";
 
 const TARGETS = ["gl:RUT", "gl:HSI", "gl:SHCOMP", "gl:STOXX600", "gl:MSCIEM", "gl:MSCIWORLD", "cmd:GOLD", "cmd:SILVER"];
-const FILLED = { "gl:RUT": "IWM", "gl:MSCIEM": "EEM", "gl:MSCIWORLD": "URTH", "cmd:GOLD": "GLD", "cmd:SILVER": "SLV" };
+const ETF_PROXIES = { "gl:RUT": "IWM", "gl:MSCIEM": "EEM", "gl:MSCIWORLD": "URTH", "cmd:SILVER": "SLV" };
+const FILLED = { ...ETF_PROXIES, "cmd:GOLD": "XAU/USD" };
 const UNFILLED = ["gl:HSI", "gl:SHCOMP", "gl:STOXX600"];
 
 describe("Twelve Data provider (India dashboard)", () => {
@@ -19,20 +20,24 @@ describe("Twelve Data provider (India dashboard)", () => {
     vi.useRealTimers();
   });
 
-  it("fills only the series with a free-plan source, each from a USD NYSE Arca ETF", () => {
+  it("fills only the series with a free-plan source: gold spot, and USD NYSE Arca ETFs for the rest", () => {
     expect(Object.fromEntries(Object.entries(TWELVE_DATA_SERIES).map(([k, q]) => [k, q.symbol]))).toEqual(FILLED);
-    for (const q of Object.values(TWELVE_DATA_SERIES)) expect(q).toMatchObject({ micCode: "ARCX", currency: "USD", closeTime: "16:00" });
+    for (const k of Object.keys(ETF_PROXIES)) expect(TWELVE_DATA_SERIES[k], k).toMatchObject({ micCode: "ARCX", currency: "USD", closeTime: "16:00" });
+    // A 24h market: no close time, so the current (incomplete) UTC day is never stored.
+    expect(TWELVE_DATA_SERIES["cmd:GOLD"]).toEqual({ symbol: "XAU/USD" });
     for (const k of TARGETS) expect(twelveDataProvider.supports(SERIES_BY_KEY[k]), k).toBe(k in FILLED);
   });
 
   it("labels every proxy as an ETF proxy in the catalogue and explains every unfilled series", () => {
-    for (const [key, symbol] of Object.entries(FILLED)) {
+    for (const [key, symbol] of Object.entries(ETF_PROXIES)) {
       const d = SERIES_BY_KEY[key];
       expect(d.title, key).toContain(`${symbol} ETF proxy`);
       expect(d.notes, key).toMatch(/^ETF PROXY, not the /);
       expect(d.notes, key).toContain(`(${symbol})`);
       expect(d.units, key).toBe("USD (ETF price)");
     }
+    expect(SERIES_BY_KEY["cmd:GOLD"]).toMatchObject({ title: "Gold spot (XAU/USD)", units: "USD/oz" });
+    expect(SERIES_BY_KEY["cmd:GOLD"].notes).not.toContain("PROXY");
     for (const key of UNFILLED) {
       expect(SERIES_BY_KEY[key].notes, key).toMatch(/^Not filled automatically: .*A different index is never substituted\./);
       expect(SERIES_BY_KEY[key].units, key).toBe("index");

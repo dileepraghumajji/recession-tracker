@@ -47,7 +47,7 @@ Shared variables (see `.env.example` for all of them; secrets are read server-si
 | `ALERT_WEBHOOK_URL` | HTTPS endpoint that receives JSON when any dashboard's alert fires (payload includes `dashboard`). |
 | `CACHE_TTL_SECONDS` | Memory-mode refresh interval (default 3600). |
 | `DHAN_ACCESS_TOKEN`, `DHAN_CLIENT_ID` | India dashboard market data from Dhan (read-only data endpoints; see the dashboard README). |
-| `TWELVE_DATA_API_KEY` | Twelve Data, shared by all dashboards (one process-wide limiter, free plan: 8 requests/minute): recession gold and Russell 2000 proxy, India global ETF proxies, gold and silver. |
+| `TWELVE_DATA_API_KEY` | Twelve Data, shared by all dashboards (one process-wide limiter, free plan: 8 requests/minute): gold spot for both dashboards, the recession Russell 2000 proxy, and India's global ETF proxies and silver. |
 
 Dashboard-specific variables are documented in each dashboard's README.
 

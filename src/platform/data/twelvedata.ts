@@ -4,8 +4,9 @@
  *
  * - Free (Basic) plan: 8 API credits per minute and 800 per day; /time_series
  *   costs 1 credit per symbol. It covers US-listed stocks/ETFs, forex and crypto;
- *   indices need Grow/Pro, commodities (e.g. XAU/USD) need Grow. The plan a
- *   symbol needs is listed by the reference endpoints with `show_plan=true`.
+ *   indices need Grow/Pro and most commodities need Grow (XAG/USD is refused on
+ *   Basic, but XAU/USD was served on a Basic key when tested on 2026-09-30). The
+ *   plan a symbol needs is listed by the reference endpoints with `show_plan=true`.
  * - Calls are spaced 8 s apart (<= 7.5 per minute) in this process; a 429 from
  *   another process sharing the key is retried after 20 s and 40 s, i.e. once
  *   the minute's credits have reset.

@@ -170,8 +170,8 @@ export const SERIES: SeriesDef[] = [
   fred("DHHNGSP", "Henry Hub natural gas", "U.S. Energy Information Administration", "D", "USD/MMBtu"),
   fred("PCOPPUSDM", "Copper", "International Monetary Fund", "M", "USD/t"),
   fred("PALUMUSDM", "Aluminium", "International Monetary Fund", "M", "USD/t"),
-  market("cmd:GOLD", "Gold (SPDR GLD ETF proxy)", TD_ETF, "D", "USD (ETF price)", etfProxy("SPDR Gold Shares (GLD), a physically backed trust valued at the LBMA Gold Price PM", "gold spot price", "spot gold (XAU/USD) needs Twelve Data's Grow plan", METAL_ETF)),
-  market("cmd:SILVER", "Silver (iShares SLV ETF proxy)", TD_ETF, "D", "USD (ETF price)", etfProxy("iShares Silver Trust (SLV), a physically backed trust valued at the LBMA Silver Price", "silver spot price", "spot silver (XAG/USD) needs Twelve Data's Grow plan", METAL_ETF)),
+  market("cmd:GOLD", "Gold spot (XAU/USD)", "Twelve Data (XAU/USD spot rate)", "D", "USD/oz", "Spot rate (not the LBMA auction price) via Twelve Data (TWELVE_DATA_API_KEY; served on the free plan when tested on 2026-09-30). Daily bars are UTC days: the current day is never stored, and a Saturday or Sunday bar holds real trading after midnight UTC (late Friday New York, Sunday evening open)."),
+  market("cmd:SILVER", "Silver (iShares SLV ETF proxy)", TD_ETF, "D", "USD (ETF price)", etfProxy("iShares Silver Trust (SLV), a physically backed trust valued at the LBMA Silver Price", "silver spot price", "spot silver (XAG/USD) is refused on Twelve Data's free plan (Grow needed)", METAL_ETF)),
   manual("cmd:STEEL", "Domestic HRC steel price", "Joint Plant Committee (Ministry of Steel)", "M", "₹/t"),
 
   // Valuation & earnings
