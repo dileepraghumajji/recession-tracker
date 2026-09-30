@@ -5,7 +5,7 @@ import { startTransition, useCallback, useEffect, useRef, useState } from "react
 import { cn } from "../cn";
 import type { NavDashboard } from "./nav-data";
 
-type State = "idle" | "live" | "paused" | "offline" | "error";
+type State = "idle" | "live" | "paused" | "offline" | "error" | "degraded";
 
 interface Status {
   version: string;
@@ -24,8 +24,8 @@ export function relativeAge(iso: string, now: number): string {
   return `${Math.round(h / 24)}d ago`;
 }
 
-const DOT: Record<State, string> = { idle: "bg-muted", live: "bg-good", paused: "bg-muted", offline: "bg-warning", error: "bg-serious" };
-const WORD: Record<State, string> = { idle: "Connecting", live: "Live", paused: "Paused", offline: "Offline", error: "Update check failed" };
+const DOT: Record<State, string> = { idle: "bg-muted", live: "bg-good", paused: "bg-muted", offline: "bg-warning", error: "bg-serious", degraded: "bg-warning" };
+const WORD: Record<State, string> = { idle: "Connecting", live: "Live", paused: "Paused", offline: "Offline", error: "Update check failed", degraded: "Synthetic data" };
 
 /**
  * "Last updated" indicator for the open dashboard. Polls /api/live/<id> every
@@ -103,6 +103,8 @@ function Poller({ id, pollSeconds }: { id: string; pollSeconds: number }) {
   }, [check, pollSeconds]);
 
   const updated = status?.updatedAt ? relativeAge(status.updatedAt, now) : null;
+  // The server reports a note when the data is degraded (e.g. a provider fallback to synthetic data).
+  const shown: State = state === "live" && status?.note ? "degraded" : state;
   const title = [
     status?.updatedAt ? `Data last updated ${new Date(status.updatedAt).toLocaleString()}` : "Data update time not known yet",
     status ? `Checked ${new Date(status.checkedAt).toLocaleTimeString()} · every ${pollSeconds >= 60 ? `${pollSeconds / 60} min` : `${pollSeconds} s`} while this tab is open` : null,
@@ -117,15 +119,15 @@ function Poller({ id, pollSeconds }: { id: string; pollSeconds: number }) {
         type="button"
         onClick={() => void check(true)}
         title={title}
-        aria-label={`${WORD[state]}${updated ? `, data updated ${updated}` : ""}. Check for new data now.`}
+        aria-label={`${WORD[shown]}${status?.note ? ` (${status.note})` : ""}${updated ? `, data updated ${updated}` : ""}. Check for new data now.`}
         className="group flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2 text-2xs text-muted transition-colors hover:bg-surface-2 hover:text-ink"
       >
         <span className="relative flex size-2" aria-hidden>
-          {state === "live" && <span className="absolute inline-flex size-full animate-ping rounded-full bg-good opacity-40 motion-reduce:hidden" />}
-          <span className={cn("relative inline-flex size-2 rounded-full", DOT[state])} />
+          {shown === "live" && <span className="absolute inline-flex size-full animate-ping rounded-full bg-good opacity-40 motion-reduce:hidden" />}
+          <span className={cn("relative inline-flex size-2 rounded-full", DOT[shown])} />
         </span>
         <span className="tabular-nums">
-          <span className="hidden sm:inline">{state === "live" || state === "idle" ? "Updated " : `${WORD[state]} · `}</span>
+          <span className="hidden sm:inline">{shown === "live" || shown === "idle" ? "Updated " : `${WORD[shown]} · `}</span>
           {updated ?? (state === "idle" ? "…" : "—")}
         </span>
         <RefreshCw className="hidden size-3 opacity-0 transition-opacity group-hover:opacity-100 sm:block" aria-hidden />

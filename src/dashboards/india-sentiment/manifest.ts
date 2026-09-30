@@ -38,9 +38,11 @@ const india: DashboardManifest = {
     },
   },
   async summary() {
-    const { getSnapshot } = await import("./lib/data/service");
+    const { dataContext, fallbackReason, getSnapshot } = await import("./lib/data/service");
     const { configOverridesFromCookie } = await import("./lib/server-config");
     const s = await getSnapshot(await configOverridesFromCookie());
+    const fb = dataContext().fallback;
+    if (fb) return { value: s.score === null ? "—" : `${s.score.toFixed(0)} / 100`, label: "SYNTHETIC demo data", detail: fallbackReason(fb), asOf: s.asOf, tone: "warning" };
     if (s.score === null || !s.band) return { value: "—", label: "Insufficient data", detail: `Model confidence ${s.confidence.score}/100`, asOf: s.asOf, tone: "neutral" };
     return {
       value: `${s.score.toFixed(0)} / 100`,

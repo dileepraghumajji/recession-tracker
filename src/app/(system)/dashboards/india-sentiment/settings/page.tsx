@@ -4,6 +4,7 @@ import { getStore } from "@/dashboards/india-sentiment/lib/data/store";
 import { SERIES } from "@/dashboards/india-sentiment/lib/series";
 import { configOverridesFromCookie } from "@/dashboards/india-sentiment/lib/server-config";
 import { FACTOR_IDS } from "@/dashboards/india-sentiment/lib/types";
+import { ProviderStatusTable } from "@/dashboards/india-sentiment/components/ProviderStatus";
 import { SettingsEditor, type EditableConfig } from "@/dashboards/india-sentiment/components/SettingsEditor";
 import { PageHeader, Panel } from "@/dashboards/india-sentiment/components/ui";
 import { fmtDate } from "@/platform/lib/format";
@@ -71,8 +72,11 @@ export default async function Settings() {
 
       <Panel title="Environment">
         <div className="grid gap-1 text-sm sm:grid-cols-3">
-          <div>Data mode: <span className="font-mono">{env.dataMode}</span></div>
-          <div>Storage: <span className="font-mono">{store.kind}</span></div>
+          <div>
+            Data mode: <span className="font-mono">{env.dataMode}</span>
+            {env.fallback && <span className="text-serious"> (fallback: provider unavailable)</span>}
+          </div>
+          <div>Storage: <span className="font-mono">{env.fallback ? "memory (synthetic fallback)" : store.kind}</span></div>
           <div>FRED API key: {env.fredApiKey ? "configured" : "not set (public CSV fallback)"}</div>
           <div>ADMIN_TOKEN (ingestion/alerts): {env.adminToken ? "configured" : "not set — ingestion disabled"}</div>
           <div>Alert webhook: {env.alertWebhook ? "configured" : "not set"}</div>
@@ -87,6 +91,14 @@ export default async function Settings() {
         </div>
       </Panel>
 
+      <Panel title="Market-data providers">
+        <ProviderStatusTable />
+        <p className="mt-3 text-[11px] text-muted">
+          Dhan is used for NSE/BSE index history and today&apos;s prices, India VIX, NIFTY / BANKNIFTY / FINNIFTY option chains and intraday prices, through read-only data endpoints only. Credentials:{" "}
+          <code>DHAN_ACCESS_TOKEN</code> and <code>DHAN_CLIENT_ID</code> (server environment). If the token expires or is rejected, this dashboard shows clearly labelled synthetic demo data until it is renewed.
+        </p>
+      </Panel>
+
       <Panel title="Getting Indian market data in">
         <div className={cn(proseClass, "max-w-4xl text-sm")}>
           <p>
@@ -95,8 +107,9 @@ export default async function Settings() {
           </p>
           <ul>
             <li>
-              <strong>Provider adapter</strong>: implement <code>MarketDataProvider</code> in <code>src/dashboards/india-sentiment/lib/data/providers/</code> (e.g. a broker API such as Upstox, Kite Connect,
-              SmartAPI or Dhan), read its credentials from server-side environment variables, and register it in <code>provider.ts</code>. The scheduled refresh then pulls it.
+              <strong>Provider adapter</strong>: Dhan is bundled (set <code>DHAN_ACCESS_TOKEN</code> and <code>DHAN_CLIENT_ID</code>). For another vendor, implement <code>MarketDataProvider</code> in{" "}
+              <code>src/dashboards/india-sentiment/lib/data/providers/</code>, read its credentials from server-side environment variables, and register it in <code>provider.ts</code>. The scheduled refresh
+              then pulls it.
             </li>
             <li>
               <strong>Ingestion API</strong>: push series observations and full option chains to <code>POST /api/india-sentiment/ingest</code> (requires <code>ADMIN_TOKEN</code>). Use this for RBI, AMFI,

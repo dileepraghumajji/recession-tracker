@@ -56,86 +56,95 @@ interface MemState {
   events: AlertEvent[];
   eventSeq: number;
 }
-const g = globalThis as unknown as { __imsMem?: MemState };
-function mem(): MemState {
-  if (!g.__imsMem) g.__imsMem = { series: {}, version: 0, chains: new Map(), intraday: new Map(), snapshots: [], alerts: [], events: [], eventSeq: 0 };
-  return g.__imsMem;
+const g = globalThis as unknown as Record<string, MemState | undefined>;
+
+/** An in-process store whose state lives under `globalThis[stateKey]` (survives dev hot reloads). */
+function createMemoryStore(stateKey: string): Store {
+  const mem = (): MemState => (g[stateKey] ??= { series: {}, version: 0, chains: new Map(), intraday: new Map(), snapshots: [], alerts: [], events: [], eventSeq: 0 });
+  return {
+    kind: "memory",
+    async loadAll() {
+      return { ...mem().series };
+    },
+    async saveSeries(meta, obs, mode) {
+      const s = mem();
+      const prev = s.series[meta.key];
+      const next = obs === null ? (prev?.obs ?? []) : mode === "merge" ? mergeObs(prev?.obs ?? [], obs) : obs;
+      s.series[meta.key] = { meta, obs: next };
+      s.version++;
+    },
+    async dataVersion() {
+      return `mem-${mem().version}`;
+    },
+    async getChains() {
+      return [...mem().chains.values()];
+    },
+    async saveChain(snap) {
+      const s = mem();
+      s.chains.set(snap.underlying, snap);
+      s.version++;
+    },
+    async getIntraday(u, since) {
+      return (mem().intraday.get(u) ?? []).filter((p) => p.ts >= since);
+    },
+    async addIntraday(u, points) {
+      const s = mem();
+      const cutoff = new Date(Date.now() - 7 * 86_400_000).toISOString();
+      const byTs = new Map((s.intraday.get(u) ?? []).filter((p) => p.ts >= cutoff).map((p) => [p.ts, p]));
+      for (const p of points) byTs.set(p.ts, p);
+      s.intraday.set(u, [...byTs.values()].sort((a, b) => (a.ts < b.ts ? -1 : 1)));
+    },
+    async saveSnapshot(row) {
+      const s = mem();
+      s.snapshots = [row, ...s.snapshots.filter((x) => x.asOf !== row.asOf)].slice(0, 500);
+    },
+    async listSnapshots(limit) {
+      return mem().snapshots.slice(0, limit);
+    },
+    async listAlerts() {
+      return mem().alerts.map((a) => ({ ...a }));
+    },
+    async createAlert(name, rule) {
+      const a: Alert = { id: newId(), name, rule, enabled: true, createdAt: new Date().toISOString(), lastState: null, lastValue: null, lastEvaluatedAt: null, lastTriggeredAt: null };
+      mem().alerts.push(a);
+      return a;
+    },
+    async deleteAlert(id) {
+      const s = mem();
+      s.alerts = s.alerts.filter((a) => a.id !== id);
+      s.events = s.events.filter((e) => e.alertId !== id);
+    },
+    async setAlertEnabled(id, enabled) {
+      const a = mem().alerts.find((x) => x.id === id);
+      if (a) a.enabled = enabled;
+    },
+    async recordAlertEvaluation(id, state, value, triggered) {
+      const a = mem().alerts.find((x) => x.id === id);
+      if (!a) return;
+      a.lastState = state;
+      a.lastValue = value;
+      a.lastEvaluatedAt = new Date().toISOString();
+      if (triggered) a.lastTriggeredAt = a.lastEvaluatedAt;
+    },
+    async addAlertEvent(alertId, message, value) {
+      const s = mem();
+      s.events.unshift({ id: ++s.eventSeq, alertId, triggeredAt: new Date().toISOString(), message, value });
+      s.events = s.events.slice(0, 1000);
+    },
+    async listAlertEvents(limit) {
+      return mem().events.slice(0, limit);
+    },
+  };
 }
 
-export const memoryStore: Store = {
-  kind: "memory",
-  async loadAll() {
-    return { ...mem().series };
-  },
-  async saveSeries(meta, obs, mode) {
-    const s = mem();
-    const prev = s.series[meta.key];
-    const next = obs === null ? (prev?.obs ?? []) : mode === "merge" ? mergeObs(prev?.obs ?? [], obs) : obs;
-    s.series[meta.key] = { meta, obs: next };
-    s.version++;
-  },
-  async dataVersion() {
-    return `mem-${mem().version}`;
-  },
-  async getChains() {
-    return [...mem().chains.values()];
-  },
-  async saveChain(snap) {
-    const s = mem();
-    s.chains.set(snap.underlying, snap);
-    s.version++;
-  },
-  async getIntraday(u, since) {
-    return (mem().intraday.get(u) ?? []).filter((p) => p.ts >= since);
-  },
-  async addIntraday(u, points) {
-    const s = mem();
-    const cutoff = new Date(Date.now() - 7 * 86_400_000).toISOString();
-    const byTs = new Map((s.intraday.get(u) ?? []).filter((p) => p.ts >= cutoff).map((p) => [p.ts, p]));
-    for (const p of points) byTs.set(p.ts, p);
-    s.intraday.set(u, [...byTs.values()].sort((a, b) => (a.ts < b.ts ? -1 : 1)));
-  },
-  async saveSnapshot(row) {
-    const s = mem();
-    s.snapshots = [row, ...s.snapshots.filter((x) => x.asOf !== row.asOf)].slice(0, 500);
-  },
-  async listSnapshots(limit) {
-    return mem().snapshots.slice(0, limit);
-  },
-  async listAlerts() {
-    return mem().alerts.map((a) => ({ ...a }));
-  },
-  async createAlert(name, rule) {
-    const a: Alert = { id: newId(), name, rule, enabled: true, createdAt: new Date().toISOString(), lastState: null, lastValue: null, lastEvaluatedAt: null, lastTriggeredAt: null };
-    mem().alerts.push(a);
-    return a;
-  },
-  async deleteAlert(id) {
-    const s = mem();
-    s.alerts = s.alerts.filter((a) => a.id !== id);
-    s.events = s.events.filter((e) => e.alertId !== id);
-  },
-  async setAlertEnabled(id, enabled) {
-    const a = mem().alerts.find((x) => x.id === id);
-    if (a) a.enabled = enabled;
-  },
-  async recordAlertEvaluation(id, state, value, triggered) {
-    const a = mem().alerts.find((x) => x.id === id);
-    if (!a) return;
-    a.lastState = state;
-    a.lastValue = value;
-    a.lastEvaluatedAt = new Date().toISOString();
-    if (triggered) a.lastTriggeredAt = a.lastEvaluatedAt;
-  },
-  async addAlertEvent(alertId, message, value) {
-    const s = mem();
-    s.events.unshift({ id: ++s.eventSeq, alertId, triggeredAt: new Date().toISOString(), message, value });
-    s.events = s.events.slice(0, 1000);
-  },
-  async listAlertEvents(limit) {
-    return mem().events.slice(0, limit);
-  },
-};
+export const memoryStore: Store = createMemoryStore("__imsMem");
+
+/**
+ * Separate, never-persisted store for the synthetic data shown when a configured
+ * market-data provider is unusable (e.g. an expired token). Keeping it apart
+ * guarantees demo data can never overwrite real stored data.
+ */
+export const demoFallbackStore: Store = createMemoryStore("__imsDemoFallback");
 
 // ----------------------------------------------------------------- postgres
 const iso = (d: Date | string | null): string | null => (d === null ? null : d instanceof Date ? d.toISOString() : new Date(d).toISOString());

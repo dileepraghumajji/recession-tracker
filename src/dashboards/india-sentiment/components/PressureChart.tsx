@@ -27,7 +27,8 @@ export function PressureChart({ underlying }: { underlying: string }) {
         if (!alive) return;
         if (frame)
           setData({
-            top: j.points.map((p: { ts: string; spot: number }) => ({ date: p.ts, value: p.spot })),
+            // Provider candles give the underlying at full 5-minute resolution; otherwise use the spot recorded with each chain snapshot.
+            top: j.prices?.length ? j.prices.map((p: { ts: string; value: number }) => ({ date: p.ts, value: p.value })) : j.points.map((p: { ts: string; spot: number }) => ({ date: p.ts, value: p.spot })),
             bottom: j.points.map((p: { ts: string; pressure: number }) => ({ date: p.ts, value: p.pressure / 1e7 })),
             intraday: true,
             label: `Net premium pressure per ${frame >= 60 ? "hour" : `${frame} min`} (₹ Cr, bullish +)`,
