@@ -24,9 +24,42 @@ trading instructions.
 
 | Source type | Examples | How it gets in |
 |---|---|---|
+| Dhan (automatic, when configured) | 16 NSE/BSE indices + India VIX (history since inception and today's price), NIFTY / BANKNIFTY / FINNIFTY option chains, intraday underlying prices | `DHAN_ACCESS_TOKEN` (+ `DHAN_CLIENT_ID`) — see below |
 | FRED (automatic) | USD/INR (Fed H.10), broad dollar, US yields, VIX, HY & EM OAS, S&P 500, Nasdaq, Nikkei, Brent, WTI, natural gas, copper, aluminium, India 10Y & 3M interbank (OECD), India IP, CPI, exports, GDP, reserves | `npm run refresh` / cron |
 | Licensed market data | NSE/BSE indices, India VIX, breadth, FII/DII & participant OI, option chains, G-Sec curve (CCIL), corporate spreads, valuation, consensus EPS, global indices not on FRED | a `MarketDataProvider` adapter, or `POST /api/india-sentiment/ingest` |
 | Official releases | RBI (repo, call money, liquidity, CP/CD, credit/deposit, NPA, reserves), AMFI, NSDL/CDSL, SEBI, MOSPI, Ministry of Finance | `POST /api/india-sentiment/ingest` |
+
+### Dhan provider
+
+`lib/data/providers/` (`dhan-endpoints.ts`, `dhan-client.ts`, `dhan.ts`). DhanHQ v2 at `https://api.dhan.co/v2`
+with headers `access-token` and `client-id`. The token has full trading scope, so the code can only reach these
+**data** endpoints (a test fails if any order/portfolio/funds path appears in the code):
+
+| Endpoint | Used for | Documented limit → what the app does |
+|---|---|---|
+| `POST /optionchain/expirylist` | active expiries per underlying | option-chain bucket, cached 6 h |
+| `POST /optionchain` | one expiry's chain (OI, previous OI, volume, LTP, previous close, IV, top bid/ask) | 1 unique request / 3 s → requests spaced ≥ 3.1 s; cached 60 s (intraday refreshes always fetch fresh) |
+| `POST /marketfeed/ohlc` | today's last price of every index in one call | 1 request / s → spaced 1.05 s; cached 15 s |
+| `POST /charts/historical` | daily index closes since inception | data APIs 5 / s, 100,000 / day → spaced 220 ms, stops at 95% of the daily cap; cached 15 min |
+| `POST /charts/intraday` | today's 5-minute candles (NIFTY confirms the market traded today; price panel above premium pressure) | same data bucket; cached 60 s |
+| `GET /instrument/NSE_FNO` | index-option lot sizes (redirect followed **without** credentials) | once a day |
+
+* Full refresh (cron / stale data): all index series plus chains for the current, next, monthly and far expiries.
+* Intraday (Mon–Fri 09:15–15:30 IST, every `INDIA_LIVE_REFRESH_SECONDS`, default 180): today's index values and the
+  current-expiry chains, which also add intraday premium-pressure points. Open pages pick changes up through the
+  live-status poll.
+* Dhan reports option volume and OI as quantity, so chains are stored with `volumeUnit: "shares"`.
+* Today's value is added only when intraday candles show a session today, so holidays never get a repeated close.
+* Rate limiting and caching are per server instance; several serverless instances each respect the limits
+  independently, so keep the cron and traffic modest or run one instance.
+* **Token state.** Expiry is read from the token's `exp` claim; `DH-901`/`807`–`810` mark it expired/invalid,
+  `DH-902`/`806` no Data API subscription, repeated network failures unreachable. In any of these states the
+  dashboard switches to **synthetic demo data from a separate in-memory store** (never persisted, never mixed with
+  real data, alerts not evaluated), shows a banner on every page, an amber "Synthetic data" status in the top bar
+  and the reason on the home card and Settings & Sources. It re-checks every 5 minutes (except for an expired token,
+  which needs a new `DHAN_ACCESS_TOKEN` and a restart/redeploy).
+* If `api.dhan.co` is blocked by an outbound allow-list, allow `api.dhan.co` (and, for lot sizes,
+  `s3.ap-south-1.amazonaws.com`).
 
 **NSE is never scraped.** Without a licensed source the Indian-market factors are shown as unavailable, Model
 Confidence falls, and the score is withheld when coverage-weighted factor weight is below 35%.
@@ -68,6 +101,8 @@ pressure, writing balance, ATM IV, skew, max-pain distance, later-expiry positio
 |---|---|
 | `INDIA_SENTIMENT_CONFIG_OVERRIDES` | JSON overrides: `factorWeights`, `thresholds` (6 cut points), `maxFactorShare`, `percentileYears`, `strikeWindow`, PCR thresholds, `changeExplainThreshold`, `divergenceMovePct`. |
 | `ADMIN_TOKEN` | Required for `/api/india-sentiment/ingest`; protects alert writes. |
+| `DHAN_ACCESS_TOKEN`, `DHAN_CLIENT_ID` | Dhan market data (server only). Client id defaults to the token's `dhanClientId` claim. |
+| `INDIA_LIVE_REFRESH_SECONDS` | Intraday refresh interval while the market may be open (default 180, minimum 60). |
 
 Tables: `db/migrations/002_india_sentiment.sql` (`india_*`).
 

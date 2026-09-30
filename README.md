@@ -46,6 +46,7 @@ Shared variables (see `.env.example` for all of them; secrets are read server-si
 | `ADMIN_TOKEN` | Protects write endpoints (alerts, licensed-data loading, India data ingestion). |
 | `ALERT_WEBHOOK_URL` | HTTPS endpoint that receives JSON when any dashboard's alert fires (payload includes `dashboard`). |
 | `CACHE_TTL_SECONDS` | Memory-mode refresh interval (default 3600). |
+| `DHAN_ACCESS_TOKEN`, `DHAN_CLIENT_ID` | India dashboard market data from Dhan (read-only data endpoints; see the dashboard README). |
 
 Dashboard-specific variables are documented in each dashboard's README.
 
