@@ -1,21 +1,15 @@
-# Macro Recession Stress Monitor
+# TerminalK
 
-A professional, transparent dashboard that monitors US macroeconomic and financial-market conditions and
-produces explainable 0–100 stress scores:
+A single product for many market and macro dashboards. Each dashboard is a self-contained module; the shared
+shell provides branding, navigation, the home page, theming, data utilities, scheduling and security.
 
-* **Recession Stress** · **Inflation Stress** · **Financial Market Stress** · **Overall Macro Stress**
-* a rule-based **regime classification** (expansion, late-cycle, growth slowdown, recession stress,
-  deflationary, stagflationary, financial stress, inflationary overheating)
-* **signal confluence** across seven independent recession categories
-* a dedicated **30Y Treasury Stress** module that decomposes long-end moves into real yields, breakevens,
-  term premium and the expected policy path
-* an **explanation engine** (what changed, why it matters, supporting/contradicting evidence, what would
-  confirm/invalidate), **configurable alerts**, a point-in-time **backtest** against NBER dates, and a
-  **historical comparison** with five fixed reference periods.
+| # | Dashboard | URL | What it does |
+|---|---|---|---|
+| 1 | **Macro Recession Stress Monitor** | `/dashboards/recession` | Explainable 0–100 US recession, inflation and financial-market stress scores, regime, 30Y Treasury module, backtest. [Docs](docs/dashboards/recession/README.md) |
+| 2 | **India Market Sentiment Terminal** (beta) | `/dashboards/india-sentiment` | Multi-factor 0–100 fear/greed read of Indian markets across 16 factor groups, option-chain analytics, divergences, regime, analogues. [Docs](docs/dashboards/india-sentiment/README.md) |
 
-> **This is an analytical decision-support tool, not a recession predictor.** Scores measure resemblance to
-> historical stress conditions; they are not probabilities. Unavailable or stale data are labelled as such —
-> values are never invented.
+> All dashboards are analytical tools. They describe conditions; they are not forecasts and nothing here is
+> investment advice. Unavailable or stale data is labelled as such and never invented.
 
 ## Quick start
 
@@ -25,71 +19,72 @@ cp .env.example .env.local          # add FRED_API_KEY (free) at minimum
 npm run dev                         # http://localhost:3000
 ```
 
-Without `DATABASE_URL` the app keeps data in memory and fetches from FRED on first request (~20–40 s).
+Without `DATABASE_URL` each dashboard keeps data in memory and loads it on first request.
+
+**Demo mode** — `DATA_MODE=demo npm run dev` generates clearly labelled **synthetic** data for every dashboard so
+every page works offline (a banner on every page says so).
 
 ### With PostgreSQL
 
 ```bash
-export DATABASE_URL=postgres://user:pass@localhost:5432/macro
-npm run db:migrate
-npm run refresh                      # initial load; schedule this (or the cron route) daily
+export DATABASE_URL=postgres://user:pass@localhost:5432/terminalk
+npm run db:migrate                   # applies db/migrations/* (each dashboard has its own tables)
+npm run refresh                      # initial load of every dashboard; `npm run refresh -- recession` for one
 npm run build && npm start
 ```
 
-### Demo mode (no network / UI development)
-
-`DATA_MODE=demo npm run dev` generates **synthetic** series so every page can be exercised offline. A
-banner on every page and "SYNTHETIC" source labels make this unmistakable. Backtest/comparison results in
-demo mode are meaningless (the generator is keyed to NBER dates).
-
 ## Configuration
+
+Shared variables (see `.env.example` for all of them; secrets are read server-side only):
 
 | Variable | Purpose |
 |---|---|
-| `FRED_API_KEY` | FRED API key (recommended). Without it the public per-series CSV endpoint is used and source "last updated" timestamps are unavailable. |
-| `TWELVE_DATA_API_KEY` | Optional: gold spot and Russell 2000 (IWM ETF proxy). |
-| `DATABASE_URL`, `DATABASE_SSL` | PostgreSQL connection (`DATABASE_SSL=require` for managed providers). |
-| `CRON_SECRET` | Bearer secret for `/api/cron/refresh` (required in production). |
-| `ADMIN_TOKEN` | Protects alert writes and enables `/api/manual` for licensed data (ISM). |
-| `ALERT_WEBHOOK_URL` | HTTPS endpoint that receives JSON when an alert fires. |
-| `MODEL_CONFIG_OVERRIDES` | JSON weight overrides, e.g. `{"categoryWeights":{"recession":{"credit_financial":30}},"overall":{"recession":60}}`. |
+| `DATA_MODE` | `live` (default) or `demo` (synthetic data for UI development). |
+| `FRED_API_KEY` | FRED API key, shared by all dashboards (one process-wide rate limiter). |
+| `DATABASE_URL`, `DATABASE_SSL`, `DATABASE_CA_CERT` | PostgreSQL connection shared by all dashboards. |
+| `CRON_SECRET` | Bearer secret for `/api/cron/refresh`, which refreshes every registered dashboard. |
+| `ADMIN_TOKEN` | Protects write endpoints (alerts, licensed-data loading, India data ingestion). |
+| `ALERT_WEBHOOK_URL` | HTTPS endpoint that receives JSON when any dashboard's alert fires (payload includes `dashboard`). |
 | `CACHE_TTL_SECONDS` | Memory-mode refresh interval (default 3600). |
-| `DATA_MODE` | `live` (default) or `demo` (synthetic). |
+| `DHAN_ACCESS_TOKEN`, `DHAN_CLIENT_ID` | India dashboard market data from Dhan (read-only data endpoints; see the dashboard README). |
 
-Secrets are only read server-side and never sent to the browser. Weights can also be changed per browser in
-**Settings**.
+Dashboard-specific variables are documented in each dashboard's README.
 
 ## Deploying
 
-* **Vercel**: set the env vars, attach a Postgres database, run `npm run db:migrate` once against it.
-  `vercel.json` schedules a daily refresh at 22:30 UTC.
+* **Vercel**: set the env vars, attach Postgres, run `npm run db:migrate` once. `vercel.json` calls
+  `/api/cron/refresh` daily at 22:30 UTC; it refreshes every dashboard independently (one failing never blocks another).
 * **Anywhere else**: `npm run build && npm start`, plus a system cron entry for `npm run refresh`.
 
-## Data sources
+## Project layout
 
-Official sources via the FRED API wherever possible: Federal Reserve Board (H.15 yields, TIPS, Kim-Wright term
-premium, industrial production, SLOOS, delinquencies, debt service, dollar index), BLS (unemployment, payrolls,
-earnings, JOLTS, CPI), BEA (GDP, PCE, income, saving), Census (housing, retail sales), Department of Labor
-(claims), Chicago Fed (NFCI), NY Fed / Philadelphia Fed (surveys, fed funds), Atlanta Fed (GDPNow), ICE BofA
-(credit OAS), Moody's (Baa spread), EIA (energy), IMF (copper), University of Michigan, CBOE (VIX), S&P and
-Nasdaq (indices), NAR and Realtor.com (housing).
+```
+src/
+  app/                         Next.js routes only
+    layout.tsx                 document root (fonts, theme, preferences)
+    (system)/layout.tsx        product shell (AppShell) for every page; (system)/page.tsx is the home page
+    (system)/dashboards/<id>/… each dashboard's pages (layout.tsx renders DashboardFrame)
+    (system)/design-system     design-system reference
+    api/<id>/…                 each dashboard's API
+    api/cron/refresh           platform cron → every registered dashboard
+    api/live/<id>              live status polled by open pages
+  platform/                    shared, dashboard-agnostic code (never imports a dashboard)
+    ui/                        design system: tokens, primitives, patterns, shell ([guide](.claude/skills/design-system/SKILL.md))
+  dashboards/
+    registry.ts                THE list of dashboards (nav, home page, cron)
+    recession/                 dashboard #1 module (manifest, lib, components)
+    india-sentiment/           dashboard #2 module
+db/migrations/                 SQL migrations, tables prefixed per dashboard
+docs/                          product architecture + per-dashboard docs
+```
 
-Not available from a free, licensed API and therefore shown as **unavailable** (never estimated): ISM PMIs
-(can be loaded via `/api/manual` with a licence), Conference Board confidence, Goldman Sachs FCI, S&P forward
-P/E / earnings yield, market breadth, financial-sector credit spreads, NY Fed auto delinquencies. Each
-indicator page lists source, series id, frequency, last observation, source update time and retrieval time.
-
-## Documentation
-
-* [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — components, data flow, API, scheduling, security.
-* [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) — stress mapping, thresholds, clustering, weights, regimes,
-  backtest design and limitations.
-* In-app: **How the Score Works** shows the live contribution of every indicator.
+* [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — product architecture, shared concerns, routing, isolation rules.
+* [`CONTRIBUTING.md`](CONTRIBUTING.md) — **how to add a new dashboard**.
 
 ## Development
 
 ```bash
-npm test          # unit + integration tests (vitest)
+npm test          # unit + integration tests, including the module-boundary test
 npm run typecheck
 ```
 

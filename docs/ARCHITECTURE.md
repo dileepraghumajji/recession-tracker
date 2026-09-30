@@ -1,92 +1,76 @@
-# Architecture
+# TerminalK architecture
 
-Macro Recession Stress Monitor is a single Next.js (App Router) application written in TypeScript. The
-frontend, API routes, scoring engine and scheduled refresh all live in one codebase; PostgreSQL stores the
-raw observations, score snapshots and user alerts.
+TerminalK is one Next.js (App Router) application that hosts many dashboards. The code is split into a
+**shared platform** and **self-contained dashboard modules**; a single registry wires the modules into the
+product.
 
 ```
-                 ┌───────────────────────────── Next.js app ──────────────────────────────┐
-  FRED API  ───► │ providers/fred.ts ─┐                                                    │
-  (Fed Board,    │                    │   data/service.ts                                  │
-  BLS, BEA,      │ providers/         ├─► refreshAll() ──► data/store.ts ──► PostgreSQL    │
-  Census, …)     │   twelvedata.ts ───┘   (retry, rate   (pg or memory)    series_meta     │
-  Twelve Data ─► │                         limit, zod                      observations    │
-  (optional)     │ /api/manual (licensed ISM data, ADMIN_TOKEN)             score_snapshots│
-                 │                                                          alerts         │
-                 │                        ┌───────── engine (pure functions) ────────┐     │
-                 │  loadPrepared() ─────► │ indicators.ts  → analyze.ts (stress, pctl)│     │
-                 │  (cached by data       │ scoring.ts (cluster pooling)              │     │
-                 │   version)             │ confluence / regime / rates-module /      │     │
-                 │                        │ energy / explain / historical (backtest)  │     │
-                 │                        └───────────────────────────────────────────┘     │
-                 │  Server components (pages)     API routes (/api/*)     Vercel Cron      │
-                 └────────────────────────────────────────────────────────────────────────┘
+                       ┌──────────────────────────── Next.js app ────────────────────────────┐
+  browser  ──────────► │ src/app/layout.tsx  (document root: fonts, theme, preferences)       │
+                       │ src/app/(system)/layout.tsx → AppShell (server + client islands),    │
+                       │   home page, /design-system, /api/live/<id> (polled live status)     │
+                       │ src/app/(system)/dashboards/<id>/layout.tsx → DashboardFrame (page   │
+                       │                                     tabs on mobile, disclaimer)      │
+                       │ src/app/(system)/dashboards/<id>/**/page.tsx  src/app/api/<id>/**    │
+                       │                │                                   │                 │
+                       │                ▼                                   ▼                 │
+                       │ src/dashboards/<id>/  (manifest, lib/engine, lib/data, components)   │
+                       │                │  imports only ▼                                     │
+                       │ src/platform/  (dashboard contract, UI, charts, http, FRED, db pool, │
+                       │                 api auth/rate limit, webhook, time-series maths)     │
+                       │                                                                      │
+                       │ src/dashboards/registry.ts ──► nav · home page · /api/cron/refresh   │
+                       └──────────────────────────────────────────────────────────────────────┘
+                                           │                              │
+                                     PostgreSQL (tables per dashboard)   FRED / licensed providers
 ```
 
-## Layers
+## Routing
 
-| Layer | Files | Responsibility |
-|---|---|---|
-| Series catalogue | `src/lib/series-catalog.ts` | One entry per upstream call: provider, source id, institution, frequency, units. |
-| Indicator catalogue | `src/lib/indicators.ts` | How each displayed indicator is derived (spreads, YoY, Sahm, drawdowns…), its polarity, stress metric, threshold mapping and cluster membership. |
-| Model config | `src/lib/model-config.ts` | Category and cluster weights for the three scores, overall mix, bands. Overridable via env (`MODEL_CONFIG_OVERRIDES`) or per-browser cookie (Settings page). |
-| Providers | `src/lib/data/providers/*` | FRED (API with key, public CSV fallback), Twelve Data (optional), synthetic (demo only). All responses validated with zod; keys redacted from errors. |
-| Store | `src/lib/data/store.ts` | `pgStore` (PostgreSQL) or `memoryStore` (no `DATABASE_URL`). |
-| Service | `src/lib/data/service.ts` | Refresh orchestration (bounded concurrency, retries/backoff on 429/5xx), in-process caches keyed by data version + config hash, alert evaluation, webhook. |
-| Engine | `src/lib/engine/*` | Pure, deterministic, unit-tested functions. No I/O. |
-| API | `src/app/api/*` | JSON endpoints (see below). |
-| UI | `src/app/*`, `src/components/*` | Server components render from the snapshot; client components for charts, alerts and the weights editor. |
-
-## Data flow
-
-1. **Refresh** (`/api/cron/refresh`, `npm run refresh`, or lazily on first request) fetches every series
-   and replaces its observations (full replace captures revisions), recording `fetched_at`,
-   the provider's `last_updated` (FRED API) and any error. Failed fetches keep previous data and are
-   surfaced in *Settings → Series retrieval status* and in the data-quality panel.
-2. **Prepare**: raw series → derived indicator series (display + stress metric). Done once per data version.
-3. **Evaluate** at an as-of date: every indicator is truncated at that date (optionally minus a publication
-   lag), its stress computed from point-in-time history, then pooled into clusters, categories and scores.
-   The dashboard evaluates "now" plus 52 weekly points for history and 1W/1M/3M deltas.
-4. **Historical engine** runs the same evaluation month-by-month since 1970 with publication lags; this
-   feeds the backtest, the 5Y/MAX score history and the historical comparison.
-
-## API
-
-| Method & path | Description |
+| Path | Served by |
 |---|---|
-| `GET /api/snapshot[?config=]` | Full current snapshot (scores, contributions, indicators, regime, explanation…). |
-| `GET /api/indicators/:id/series?period=1M\|3M\|1Y\|5Y\|MAX` | Display series and point-in-time stress series for charts. |
-| `GET /api/score-history` | Monthly point-in-time composite history. |
-| `GET /api/backtest?threshold=&sustain=&horizon=&coverage=&score=` | Backtest results. |
-| `GET /api/history` | Period comparison. |
-| `GET/POST /api/alerts`, `PATCH/DELETE /api/alerts/:id` | User-configured alerts (write-protected when `ADMIN_TOKEN` is set). |
-| `GET /api/cron/refresh` | Scheduled refresh; requires `Authorization: Bearer $CRON_SECRET`. |
-| `POST /api/manual` | Load licensed proprietary series (ISM). Requires `ADMIN_TOKEN`. |
-| `GET /api/status` | Which env vars are configured (booleans only) and per-series fetch status. |
+| `/` | Product home (`src/app/page.tsx`) |
+| `/dashboards/recession/*` | Dashboard #1 pages |
+| `/api/recession/*` | Dashboard #1 API |
+| `/dashboards/india-sentiment/*` | Dashboard #2 pages |
+| `/api/india-sentiment/*` | Dashboard #2 API |
+| `/api/cron/refresh` | Platform cron: refreshes every registered dashboard |
+| `/api/live/<id>` | Cheap live status (data version, last update) polled by open pages |
+| `/design-system` | Design-system reference and sample screens |
+| `/indicators`, `/rates`, `/api/snapshot`, … | 308 redirects to the recession dashboard (pre-restructure URLs, `next.config.ts`) |
 
-## Scheduling
+## Shared concerns (handled once)
 
-* **Vercel**: `vercel.json` schedules `/api/cron/refresh` daily at 22:30 UTC (after most US releases and
-  the H.15 update). Vercel sends `CRON_SECRET` automatically. Increase frequency on paid plans if desired.
-* **Self-hosted**: run `npm run refresh` from cron.
-* If a scheduled run is missed, the app triggers a background refresh when data are older than 26 h
-  (PostgreSQL) or older than `CACHE_TTL_SECONDS` (memory mode).
+| Concern | Where |
+|---|---|
+| Branding, navigation, home page | `src/platform/product.ts`, `src/app/layout.tsx`, `src/app/page.tsx`, driven by `src/dashboards/registry.ts` |
+| Consistent page structure | `AppShell` (server-rendered; nav state, drawer, ⌘K menu and preferences are small client islands) and `DashboardFrame` in every dashboard layout |
+| Design system | Tokens on `:root` in `src/platform/ui/tokens.css` (mapped to Tailwind in `globals.css`), primitives/patterns/shell in `src/platform/ui`; guide: `.claude/skills/design-system/SKILL.md`, catalogue: `/design-system`, Storybook |
+| Theme / density / colour scheme | `data-theme`, `data-density`, `data-market`, `data-sidebar` on `<html>`, set before paint (dark default); display menu and ⌘K |
+| Responsive layout | Sidebar becomes a drawer and page tabs below `lg`; container-query widget grid; tables scroll inside panels |
+| Live updates | Manifest `live.status()` → `/api/live/<id>`; the top-bar indicator polls while the tab is visible and re-renders the page only when the data version changes |
+| Performance | Charts (Recharts `.view` modules, Lightweight Charts) load and render only near the viewport, in idle time |
+| Data providers | `src/platform/data/http.ts` (timeouts, retry/backoff on 429/5xx, bounded concurrency, key redaction), `src/platform/data/fred.ts` (one throttle for the whole process) |
+| Persistence | `src/platform/data/db.ts` — one pool, TLS config; each dashboard owns its tables and has an in-memory fallback |
+| Caching | Each dashboard caches derived data by *data version + config hash* (in-process), recomputed after refresh or ingestion |
+| Scheduling | `vercel.json` → `/api/cron/refresh` → `refreshDashboards()` (parallel, isolated failures); `npm run refresh [-- <id>]` for self-hosting; stale-data background refresh via `after()` |
+| Error handling | `errorResponse()` logs server-side and returns a generic message; failed upstream fetches keep previous data and are surfaced as data-quality status |
+| Loading states | Server-rendered pages; the first load of an empty store waits a bounded time, then renders whatever is available (marked unavailable) while loading continues; the home page never waits more than 2.5 s for a dashboard |
+| Security | Secrets only in `process.env`; `checkAdmin` (constant-time) for writes, `checkCron` for the cron; per-IP rate limits; zod validation; security headers in `next.config.ts` |
+| Alerts | Each dashboard defines its own rules and store; fired alerts go to the shared `postWebhook` with a `dashboard` field |
 
-## Security
+## Isolation rules (enforced by `src/dashboards/boundaries.test.ts`)
 
-* API keys are read only on the server (`process.env`), never serialised to the client, and redacted from
-  error messages. `/api/status` exposes booleans only.
-* All external responses are schema-validated (zod) and size-bounded; malformed values are dropped, not coerced.
-* Cron endpoint requires a bearer secret (rejected in production if `CRON_SECRET` is unset). Write endpoints
-  honour `ADMIN_TOKEN` (constant-time comparison). Expensive endpoints are rate-limited per IP.
-* Alert webhooks must be HTTPS. Model overrides from cookies/query strings are parsed defensively (whitelisted keys, bounded numbers).
-* No scraping: only documented APIs / download endpoints are used. Proprietary data (ISM, Conference Board,
-  GS FCI, forward P/E) are shown as unavailable unless the operator loads licensed data.
-* Security headers (`X-Frame-Options`, `nosniff`, `Referrer-Policy`) are set in `next.config.ts`.
+* `src/platform/**` never imports a dashboard or an app route.
+* `src/dashboards/<a>/**` never imports another dashboard, the registry or `src/app`.
+* `src/app/dashboards/<a>/**` and `src/app/api/<a>/**` import only their own dashboard (plus platform); only
+  route files may look themselves up in the registry.
+* Every registered dashboard has `manifest.ts`, a layout and a page for every nav entry, and uses
+  `/dashboards/<id>` and `/api/<id>`.
 
-## Testing
+## Dashboards
 
-`npm test` runs unit tests for time-series maths (Sahm Rule, percentiles, YoY, drawdowns), scoring
-(cluster pooling, contributions summing to the score, coverage/freshness, override parsing), catalogue
-consistency (every cluster populated, no indicator twice in one score) and an integration test that builds a
-full snapshot and backtest from synthetic data.
+* [Recession Stress Monitor](dashboards/recession/README.md) — [architecture](dashboards/recession/ARCHITECTURE.md), [methodology](dashboards/recession/METHODOLOGY.md)
+* [India Market Sentiment Terminal](dashboards/india-sentiment/README.md)
+
+To add one, follow [CONTRIBUTING.md](../CONTRIBUTING.md).
