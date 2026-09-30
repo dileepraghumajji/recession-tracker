@@ -25,6 +25,7 @@ trading instructions.
 | Source type | Examples | How it gets in |
 |---|---|---|
 | Dhan (automatic, when configured) | 16 NSE/BSE indices + India VIX (history since inception and today's price), NIFTY / BANKNIFTY / FINNIFTY option chains, intraday underlying prices | `DHAN_ACCESS_TOKEN` (+ `DHAN_CLIENT_ID`) — see below |
+| Market breadth from Dhan stock candles (automatic, when configured) | advances/declines, advancing/declining volume, new 52-week highs/lows, % of stocks above 20/50/100/200-DMA across ~2,600 NSE mainboard stocks | breadth job — see [Market breadth](#market-breadth) |
 | FRED (automatic) | USD/INR (Fed H.10), broad dollar, US yields, VIX, HY & EM OAS, S&P 500, Nasdaq, Nikkei, Brent, WTI, natural gas, copper, aluminium, India 10Y & 3M interbank (OECD), India IP, CPI, exports, GDP, reserves | `npm run refresh` / cron |
 | Licensed market data | NSE/BSE indices, India VIX, breadth, FII/DII & participant OI, option chains, G-Sec curve (CCIL), corporate spreads, valuation, consensus EPS, global indices not on FRED | a `MarketDataProvider` adapter, or `POST /api/india-sentiment/ingest` |
 | Official releases | RBI (repo, call money, liquidity, CP/CD, credit/deposit, NPA, reserves), AMFI, NSDL/CDSL, SEBI, MOSPI, Ministry of Finance | `POST /api/india-sentiment/ingest` |
@@ -43,6 +44,7 @@ with headers `access-token` and `client-id`. The token has full trading scope, s
 | `POST /charts/historical` | daily index closes since inception | data APIs 5 / s, 100,000 / day → spaced 220 ms, stops at 95% of the daily cap; cached 15 min |
 | `POST /charts/intraday` | today's 5-minute candles (NIFTY confirms the market traded today; price panel above premium pressure) | same data bucket; cached 60 s |
 | `GET /instrument/NSE_FNO` | index-option lot sizes (redirect followed **without** credentials) | once a day |
+| `GET /instrument/NSE_EQ` | the stock universe for market breadth (redirect followed without credentials) | once per breadth cycle |
 
 * Full refresh (cron / stale data): all index series plus chains for the current, next, monthly and far expiries.
 * Intraday (Mon–Fri 09:15–15:30 IST, every `INDIA_LIVE_REFRESH_SECONDS`, default 180): today's index values and the
@@ -60,6 +62,41 @@ with headers `access-token` and `client-id`. The token has full trading scope, s
   which needs a new `DHAN_ACCESS_TOKEN` and a restart/redeploy).
 * If `api.dhan.co` is blocked by an outbound allow-list, allow `api.dhan.co` (and, for lot sizes,
   `s3.ap-south-1.amazonaws.com`).
+
+### Market breadth
+
+`lib/data/breadth/` (`universe.ts`, `compute.ts`, `job.ts`). Computed by this app from each stock's Dhan daily candles
+(`/charts/historical`, which Dhan adjusts for splits and bonuses), so no breadth vendor or scraping is needed.
+
+* **Universe**: NSE mainboard equity shares from the NSE_EQ instrument list: `INSTRUMENT=EQUITY`,
+  `INSTRUMENT_TYPE=ES`, `SERIES` EQ, BE or BZ; one per ISIN (~2,600). SME (SM/ST), ETFs, fund units, REITs/InvITs,
+  bonds, T-bills and SGBs are excluded.
+* **Definitions** (per stock and session): advance/decline/unchanged = close vs the stock's previous close (not counted
+  on its first candle); advancing/declining volume = that day's traded quantity of advancing/declining stocks;
+  % above N-DMA = close above the simple average of its last N closes, among stocks with ≥ N sessions; new 52-week
+  high/low = the day's high/low beyond the stock's highest high/lowest low of the preceding 52 weeks (d−364 … d−1),
+  among stocks trading for ≥ 52 weeks.
+* **Sessions**: the NIFTY 50 daily candles are the trading calendar (Muhurat sessions included, holidays never
+  published). Only the **last completed** session is computed (never today's forming candle). A session is withheld
+  when fewer than 100 stocks traded or fewer than 80% of the median of its ±10 neighbouring sessions (incomplete source
+  data); the reason is shown on Settings & Sources.
+* **Point in time**: each session is published once, with the universe of that day, and never revised. The first
+  run reconstructs history from 2011-01-03 using today's listed stocks: companies delisted since are missing
+  (survivorship bias, larger further back).
+* **Not computed**: traded value in advancing/declining stocks (`breadth:up_value` / `down_value`) is not in daily
+  candles and is never estimated; it remains ingestion-only.
+* **Job**: ~2,600 requests at Dhan's 5/s take ~10 minutes (the first, full-history run longer), more than one
+  serverless call may run, so the work is a resumable cycle. After every chunk of 40 stocks the counters and the
+  position are checkpointed together (`india_jobs` table, `db/migrations/003_india_jobs.sql`), and a lease lets
+  only one instance work at a time, so a time-out or overlapping cron call never counts a stock twice. Transient
+  failures are retried in up to two more passes; if more than 1% of the universe is still missing (or over 5% return
+  no data) nothing is published and the next run starts over. Auth/subscription errors stop the run and it resumes
+  when the token works again.
+* **Schedule**: `vercel.json` calls `/api/cron/india-breadth` four times each morning (23:40, 00:40, 01:40,
+  02:40 UTC ≈ 05:10–08:10 IST, before the 09:15 open); each call runs up to ~280 s and continues where the previous
+  one stopped. Self-hosted: `npm run breadth` (no time limit), e.g. `40 23 * * * cd /app && npm run breadth`.
+  Run `npm run breadth` once locally against the production database to build the history in one go.
+  A database is required in practice: with the in-memory store, progress and results are lost on restart.
 
 **NSE is never scraped.** Without a licensed source the Indian-market factors are shown as unavailable, Model
 Confidence falls, and the score is withheld when coverage-weighted factor weight is below 35%.
@@ -104,7 +141,8 @@ pressure, writing balance, ATM IV, skew, max-pain distance, later-expiry positio
 | `DHAN_ACCESS_TOKEN`, `DHAN_CLIENT_ID` | Dhan market data (server only). Client id defaults to the token's `dhanClientId` claim. |
 | `INDIA_LIVE_REFRESH_SECONDS` | Intraday refresh interval while the market may be open (default 180, minimum 60). |
 
-Tables: `db/migrations/002_india_sentiment.sql` (`india_*`).
+Tables: `db/migrations/002_india_sentiment.sql` and `003_india_jobs.sql` (`india_*`); run `npm run db:migrate` after
+upgrading.
 
 ## Limitations
 

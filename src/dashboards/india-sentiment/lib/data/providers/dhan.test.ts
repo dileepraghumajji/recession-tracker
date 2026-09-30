@@ -40,7 +40,7 @@ describe("Dhan: data endpoints only (the token has full trading scope)", () => {
 
   it("every whitelisted endpoint is a documented data endpoint and none is an order endpoint", () => {
     const paths = Object.values(DHAN_ENDPOINTS).map((e) => e.path).sort();
-    expect(paths).toEqual(["/charts/historical", "/charts/intraday", "/instrument/NSE_FNO", "/marketfeed/ohlc", "/optionchain", "/optionchain/expirylist"]);
+    expect(paths).toEqual(["/charts/historical", "/charts/intraday", "/instrument/NSE_EQ", "/instrument/NSE_FNO", "/marketfeed/ohlc", "/optionchain", "/optionchain/expirylist"]);
     for (const p of paths) for (const bad of DHAN_FORBIDDEN_PATH_PREFIXES) expect(p.startsWith(bad)).toBe(false);
     expect(isAllowedDhanPath("/orders")).toBe(false);
     expect(isAllowedDhanPath("/super/orders")).toBe(false);

@@ -195,7 +195,7 @@ async function send(name: DhanEndpointName, body: unknown, parse: "json" | "text
   for (let attempt = 0; ; attempt++) {
     await acquire(ep.bucket);
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), name === "instrumentsNseFno" ? 60_000 : 20_000);
+    const timer = setTimeout(() => ctrl.abort(), name.startsWith("instruments") ? 60_000 : 20_000);
     let res: Response;
     try {
       res = await fetchImpl(DHAN_BASE_URL + ep.path, {
@@ -250,18 +250,22 @@ async function send(name: DhanEndpointName, body: unknown, parse: "json" | "text
 
 /**
  * Calls a whitelisted Dhan data endpoint with response caching and in-flight
- * de-duplication. `maxAgeMs` overrides the endpoint's default cache lifetime.
+ * de-duplication. `maxAgeMs` overrides the endpoint's default cache lifetime;
+ * `cache: false` neither reads nor stores the cache (bulk one-off requests such
+ * as per-stock histories would otherwise evict everything else).
  */
-export async function dhanRequest<T>(name: DhanEndpointName, body: unknown = null, opts: { maxAgeMs?: number; text?: boolean } = {}): Promise<T> {
+export async function dhanRequest<T>(name: DhanEndpointName, body: unknown = null, opts: { maxAgeMs?: number; text?: boolean; cache?: boolean } = {}): Promise<T> {
   const s = st();
   const key = `${name}|${JSON.stringify(body)}`;
+  const useCache = opts.cache !== false;
   const maxAge = opts.maxAgeMs ?? DHAN_ENDPOINTS[name].cacheMs;
-  const hit = s.cache.get(key);
+  const hit = useCache ? s.cache.get(key) : undefined;
   if (hit && Date.now() - hit.at < maxAge) return hit.value as T;
   const pending = s.inflight.get(key);
   if (pending) return pending as Promise<T>;
   const p = send(name, body, opts.text ? "text" : "json")
     .then((v) => {
+      if (!useCache) return v;
       s.cache.set(key, { at: Date.now(), value: v });
       if (s.cache.size > 400) s.cache.delete(s.cache.keys().next().value as string);
       return v;

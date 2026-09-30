@@ -14,6 +14,9 @@
 import type { Frequency, SeriesDef } from "./types";
 
 const NSE = "NSE (licensed provider / ingestion)";
+const BREADTH = "Computed from Dhan daily candles of NSE mainboard stocks (or ingestion)";
+const BREADTH_NOTE =
+  "Universe: NSE mainboard equity shares (series EQ, BE, BZ; no SME, ETFs or debt), from split/bonus-adjusted Dhan daily candles; only NSE sessions with complete data are published and published values are never revised. History before the first run is reconstructed from stocks listed today, so companies delisted since then are missing (survivorship bias grows with age).";
 
 const idx = (sym: string, title: string, source = NSE): SeriesDef => ({ key: `idx:${sym}`, title, source, kind: "market", sourceId: sym, frequency: "D", units: "index" });
 const fred = (id: string, title: string, source: string, frequency: Frequency, units: string, notes?: string): SeriesDef => ({
@@ -90,20 +93,18 @@ export const SERIES: SeriesDef[] = [
   idx("INDIAVIX", "India VIX"),
 
   // Breadth & internals (NSE universe)
-  market("breadth:adv", "Advancing issues", NSE, "D", "count"),
-  market("breadth:dec", "Declining issues", NSE, "D", "count"),
-  market("breadth:adv_vol", "Advancing volume", NSE, "D", "shares"),
-  market("breadth:dec_vol", "Declining volume", NSE, "D", "shares"),
-  market("breadth:up_value", "Traded value in advancing stocks", NSE, "D", "₹ Cr"),
-  market("breadth:down_value", "Traded value in declining stocks", NSE, "D", "₹ Cr"),
-  market("breadth:new_high", "New 52-week highs", NSE, "D", "count"),
-  market("breadth:new_low", "New 52-week lows", NSE, "D", "count"),
-  market("breadth:pct_above_20", "% of stocks above 20DMA", NSE, "D", "%"),
-  market("breadth:pct_above_50", "% of stocks above 50DMA", NSE, "D", "%"),
-  market("breadth:pct_above_100", "% of stocks above 100DMA", NSE, "D", "%"),
-  market("breadth:pct_above_200", "% of stocks above 200DMA", NSE, "D", "%"),
-
-  // Institutional flows
+  market("breadth:adv", "Advancing issues", BREADTH, "D", "count", `Stocks closing above their previous close. ${BREADTH_NOTE}`),
+  market("breadth:dec", "Declining issues", BREADTH, "D", "count", `Stocks closing below their previous close. ${BREADTH_NOTE}`),
+  market("breadth:adv_vol", "Advancing volume", BREADTH, "D", "shares", `Traded quantity of advancing stocks. ${BREADTH_NOTE}`),
+  market("breadth:dec_vol", "Declining volume", BREADTH, "D", "shares", `Traded quantity of declining stocks. ${BREADTH_NOTE}`),
+  market("breadth:up_value", "Traded value in advancing stocks", NSE, "D", "₹ Cr", "Traded value is not in daily candles, so it is never estimated: ingestion only."),
+  market("breadth:down_value", "Traded value in declining stocks", NSE, "D", "₹ Cr", "Traded value is not in daily candles, so it is never estimated: ingestion only."),
+  market("breadth:new_high", "New 52-week highs", BREADTH, "D", "count", `Day's high above the stock's highest high of the preceding 52 weeks; stocks listed for under 52 weeks are not counted. ${BREADTH_NOTE}`),
+  market("breadth:new_low", "New 52-week lows", BREADTH, "D", "count", `Day's low below the stock's lowest low of the preceding 52 weeks; stocks listed for under 52 weeks are not counted. ${BREADTH_NOTE}`),
+  market("breadth:pct_above_20", "% of stocks above 20DMA", BREADTH, "D", "%", `Close above the simple average of the last 20 closes, among stocks with ≥ 20 sessions. ${BREADTH_NOTE}`),
+  market("breadth:pct_above_50", "% of stocks above 50DMA", BREADTH, "D", "%", `Close above the simple average of the last 50 closes, among stocks with ≥ 50 sessions. ${BREADTH_NOTE}`),
+  market("breadth:pct_above_100", "% of stocks above 100DMA", BREADTH, "D", "%", `Close above the simple average of the last 100 closes, among stocks with ≥ 100 sessions. ${BREADTH_NOTE}`),
+  market("breadth:pct_above_200", "% of stocks above 200DMA", BREADTH, "D", "%", `Close above the simple average of the last 200 closes, among stocks with ≥ 200 sessions. ${BREADTH_NOTE}`),
   market("flow:fii_cash", "FII/FPI net cash-market flow", "NSE / NSDL (FPI)", "D", "₹ Cr"),
   market("flow:dii_cash", "DII net cash-market flow", NSE, "D", "₹ Cr"),
   market("flow:fii_idx_fut_long", "FII index futures long OI", "NSE participant-wise OI", "D", "contracts"),

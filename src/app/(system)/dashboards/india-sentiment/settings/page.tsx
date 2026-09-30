@@ -1,4 +1,5 @@
 import { DEFAULT_CONFIG, resolveConfig, type SentimentConfig } from "@/dashboards/india-sentiment/lib/config";
+import { breadthEnabled, breadthStatus } from "@/dashboards/india-sentiment/lib/data/breadth/job";
 import { environmentStatus, getSeriesMap } from "@/dashboards/india-sentiment/lib/data/service";
 import { getStore } from "@/dashboards/india-sentiment/lib/data/store";
 import { SERIES } from "@/dashboards/india-sentiment/lib/series";
@@ -51,6 +52,8 @@ export default async function Settings() {
   const cfg = resolveConfig(await configOverridesFromCookie());
   const [series, env] = [await getSeriesMap(), environmentStatus()];
   const store = getStore();
+  const breadth = await breadthStatus(store);
+  const breadthOn = breadthEnabled();
   const labels = Object.fromEntries(FACTOR_IDS.map((id) => [id, DEFAULT_CONFIG.factors[id].label]));
   const counts = SERIES.reduce<Record<string, { total: number; loaded: number }>>((m, d) => {
     const k = d.kind;
@@ -96,6 +99,36 @@ export default async function Settings() {
         <p className="mt-3 text-[11px] text-muted">
           Dhan is used for NSE/BSE index history and today&apos;s prices, India VIX, NIFTY / BANKNIFTY / FINNIFTY option chains and intraday prices, through read-only data endpoints only. Credentials:{" "}
           <code>DHAN_ACCESS_TOKEN</code> and <code>DHAN_CLIENT_ID</code> (server environment). If the token expires or is rejected, this dashboard shows clearly labelled synthetic demo data until it is renewed.
+        </p>
+      </Panel>
+
+      <Panel title="Market breadth (computed from Dhan stock candles)">
+        <div className="grid gap-1 text-sm">
+          {!breadthOn.ok && <div className="text-muted">Not running: {breadthOn.reason}.</div>}
+          {breadth.last ? (
+            <div>
+              Last computed session: <span className="font-mono">{breadth.last.target}</span> ({breadth.last.universe - breadth.last.missing - breadth.last.noData} of {breadth.last.universe} stocks
+              {breadth.last.noData ? `, ${breadth.last.noData} without data` : ""}
+              {breadth.last.missing ? `, ${breadth.last.missing} failed` : ""}), finished {fmtDate(breadth.last.finishedAt)}.
+              {breadth.last.sessionsPublished ? ` Published ${breadth.last.sessionsPublished} session(s) ${breadth.last.publishedFrom} … ${breadth.last.publishedTo}.` : ""}
+              {breadth.last.withheld.length ? <span className="text-serious"> Withheld: {breadth.last.withheld.map((w) => `${w.date} (${w.reason})`).join("; ")}.</span> : null}
+            </div>
+          ) : (
+            breadthOn.ok && <div className="text-muted">No breadth computed yet.</div>
+          )}
+          {breadth.running && (
+            <div>
+              In progress: sessions {breadth.running.publishFrom} … {breadth.running.target}, {breadth.running.done} of {breadth.running.total} stocks (pass {breadth.running.pass}), started {fmtDate(breadth.running.startedAt)}.
+            </div>
+          )}
+          {breadth.lastError && <div className="text-serious">Last error ({fmtDate(breadth.lastError.at)}): {breadth.lastError.message}</div>}
+        </div>
+        <p className="mt-3 text-[11px] text-muted">
+          Universe: NSE mainboard equity shares (series EQ, BE, BZ; no SME, ETFs or debt) from Dhan&apos;s instrument list, using split/bonus-adjusted daily candles. Advances/declines compare each close with
+          the stock&apos;s previous close; % above N-DMA counts stocks with at least N sessions; 52-week highs/lows compare the day&apos;s high/low with the preceding 52 weeks. Only the last completed NSE
+          session is computed, only complete sessions are published, and published values are never revised. The history before the first run is reconstructed from today&apos;s listed stocks (delisted
+          companies are missing). Traded value (up/down value) is not in daily candles and is never estimated. Runs from <code>/api/cron/india-breadth</code> (several times each morning, resuming where it
+          stopped) or <code>npm run breadth</code>; a database (<code>DATABASE_URL</code>) is needed to keep progress between runs.
         </p>
       </Panel>
 

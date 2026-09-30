@@ -16,6 +16,7 @@ import { aggregatesFor, analyzeChain, bucketIntraday, classifyExpiries, intraday
 import { buildSnapshot, optionsOverview, type Snapshot } from "../engine/snapshot";
 import { OPTION_UNDERLYINGS, SERIES, SERIES_BY_KEY } from "../series";
 import type { Obs, OptionChainSnapshot, SeriesDef, SeriesMap, SeriesMeta } from "../types";
+import { BREADTH_OUTPUT_KEYS } from "./breadth/compute";
 import { providerFor, PROVIDERS, type MarketDataProvider, type ProviderStatus } from "./provider";
 import { marketMaybeOpen } from "./providers/dhan";
 import { demoFallbackStore, getStore, type Store } from "./store";
@@ -200,7 +201,11 @@ async function refreshContext(ctx: DataContext): Promise<RefreshReport> {
       if (d.kind === "derived") return false; // computed from ingested chains
       if (d.kind === "fred") return true;
       if (providerFor(d)) return true;
-      skipped.push({ key: d.key, reason: d.kind === "market" ? "no market-data provider configured (ingest via API)" : "official release: load via ingestion API" });
+      const breadthJob = PROVIDERS.some((p) => p.name === "dhan" && p.configured()) && (BREADTH_OUTPUT_KEYS as readonly string[]).includes(d.key);
+      skipped.push({
+        key: d.key,
+        reason: breadthJob ? "computed from Dhan stock candles by the breadth job (/api/cron/india-breadth)" : d.kind === "market" ? "no market-data provider configured (ingest via API)" : "official release: load via ingestion API",
+      });
       return false;
     });
     // Live option chains have their own rate bucket: fetch them alongside the series so a slow
@@ -337,6 +342,13 @@ async function afterDataChange(ctx: DataContext) {
   } catch (e) {
     console.error("india-sentiment post-refresh processing failed", e);
   }
+}
+
+/** Recomputes caches, the stored snapshot and alerts after data was written outside refresh/ingest (e.g. by the breadth job). */
+export async function afterExternalWrite(): Promise<void> {
+  const ctx = mainContext();
+  invalidate(ctx);
+  await afterDataChange(ctx);
 }
 
 // ------------------------------------------------------------------ ingestion

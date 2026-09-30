@@ -35,6 +35,15 @@ export interface Store {
   recordAlertEvaluation(id: string, state: boolean | null, value: number | null, triggered: boolean): Promise<void>;
   addAlertEvent(alertId: string, message: string, value: number | null): Promise<void>;
   listAlertEvents(limit: number): Promise<AlertEvent[]>;
+  /**
+   * Resumable background jobs: a lease (owner + expiry) lets only one instance
+   * work on a job at a time, and only the lease holder can save its state.
+   */
+  acquireJobLease(key: string, owner: string, ms: number): Promise<boolean>;
+  releaseJobLease(key: string, owner: string): Promise<void>;
+  loadJobState<T>(key: string): Promise<T | null>;
+  /** False (nothing saved) when `owner` no longer holds the lease. */
+  saveJobState(key: string, owner: string, state: unknown): Promise<boolean>;
 }
 
 const newId = () => globalThis.crypto.randomUUID();
@@ -55,12 +64,13 @@ interface MemState {
   alerts: Alert[];
   events: AlertEvent[];
   eventSeq: number;
+  jobs: Map<string, { state: unknown; owner: string | null; until: number }>;
 }
 const g = globalThis as unknown as Record<string, MemState | undefined>;
 
 /** An in-process store whose state lives under `globalThis[stateKey]` (survives dev hot reloads). */
-function createMemoryStore(stateKey: string): Store {
-  const mem = (): MemState => (g[stateKey] ??= { series: {}, version: 0, chains: new Map(), intraday: new Map(), snapshots: [], alerts: [], events: [], eventSeq: 0 });
+export function createMemoryStore(stateKey: string): Store {
+  const mem = (): MemState => (g[stateKey] ??= { series: {}, version: 0, chains: new Map(), intraday: new Map(), snapshots: [], alerts: [], events: [], eventSeq: 0, jobs: new Map() });
   return {
     kind: "memory",
     async loadAll() {
@@ -133,6 +143,27 @@ function createMemoryStore(stateKey: string): Store {
     },
     async listAlertEvents(limit) {
       return mem().events.slice(0, limit);
+    },
+    async acquireJobLease(key, owner, ms) {
+      const jobs = mem().jobs;
+      const j = jobs.get(key);
+      if (j && j.owner && j.owner !== owner && j.until > Date.now()) return false;
+      jobs.set(key, { state: j?.state ?? null, owner, until: Date.now() + ms });
+      return true;
+    },
+    async releaseJobLease(key, owner) {
+      const j = mem().jobs.get(key);
+      if (j?.owner === owner) j.owner = null;
+    },
+    async loadJobState<T>(key: string) {
+      const j = mem().jobs.get(key);
+      return j?.state == null ? null : (structuredClone(j.state) as T);
+    },
+    async saveJobState(key, owner, state) {
+      const j = mem().jobs.get(key);
+      if (!j || j.owner !== owner) return false;
+      j.state = structuredClone(state);
+      return true;
     },
   };
 }
@@ -293,6 +324,28 @@ export const pgStore: Store = {
   async listAlertEvents(limit) {
     const r = await (await pool()).query("SELECT * FROM india_alert_events ORDER BY triggered_at DESC LIMIT $1", [limit]);
     return r.rows.map((x) => ({ id: Number(x.id), alertId: x.alert_id, triggeredAt: iso(x.triggered_at) as string, message: x.message, value: x.value }));
+  },
+  async acquireJobLease(key, owner, ms) {
+    // Atomic: take the lease when it is free, expired or already ours.
+    const r = await (await pool()).query(
+      `INSERT INTO india_jobs (job_key, lease_owner, lease_until) VALUES ($1, $2, now() + ($3 || ' milliseconds')::interval)
+       ON CONFLICT (job_key) DO UPDATE SET lease_owner = EXCLUDED.lease_owner, lease_until = EXCLUDED.lease_until
+       WHERE india_jobs.lease_owner IS NULL OR india_jobs.lease_owner = EXCLUDED.lease_owner OR india_jobs.lease_until < now()
+       RETURNING job_key`,
+      [key, owner, String(Math.round(ms))],
+    );
+    return (r.rowCount ?? 0) > 0;
+  },
+  async releaseJobLease(key, owner) {
+    await (await pool()).query("UPDATE india_jobs SET lease_owner = NULL, lease_until = NULL WHERE job_key = $1 AND lease_owner = $2", [key, owner]);
+  },
+  async loadJobState<T>(key: string) {
+    const r = await (await pool()).query("SELECT state FROM india_jobs WHERE job_key = $1", [key]);
+    return (r.rows[0]?.state as T | undefined) ?? null;
+  },
+  async saveJobState(key, owner, state) {
+    const r = await (await pool()).query("UPDATE india_jobs SET state = $3, updated_at = now() WHERE job_key = $1 AND lease_owner = $2 AND lease_until > now()", [key, owner, JSON.stringify(state)]);
+    return (r.rowCount ?? 0) > 0;
   },
 };
 

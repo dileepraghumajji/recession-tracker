@@ -6,7 +6,8 @@
  * (or any order-related path) appears in the source.
  *
  * Verified against https://dhanhq.co/docs/v2/ (option-chain, market-quote,
- * historical-data, instruments, annexure; checked 2026-09-30).
+ * historical-data, instruments, annexure; checked 2026-09-30). Daily
+ * historical candles are adjusted for splits and bonuses (Dhan support FAQ).
  */
 export const DHAN_BASE_URL = "https://api.dhan.co/v2";
 
@@ -34,6 +35,8 @@ export const DHAN_ENDPOINTS = {
   intradayCandles: { path: "/charts/intraday", method: "POST", bucket: "data", cacheMs: 60_000 },
   /** GET → instrument list CSV for one exchange segment (used only for option lot sizes). */
   instrumentsNseFno: { path: "/instrument/NSE_FNO", method: "GET", bucket: "data", cacheMs: 24 * 3600_000 },
+  /** GET → NSE cash-market instrument list CSV (the stock universe for market breadth). */
+  instrumentsNseEq: { path: "/instrument/NSE_EQ", method: "GET", bucket: "data", cacheMs: 24 * 3600_000 },
 } as const satisfies Record<string, DhanEndpoint>;
 
 export type DhanEndpointName = keyof typeof DHAN_ENDPOINTS;

@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:migrate": "tsx scripts/migrate.ts",
-    "refresh": "tsx scripts/refresh.ts",
+    "refresh": "tsx --conditions=react-server scripts/refresh.ts",
+    "breadth": "tsx --conditions=react-server scripts/breadth.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o storybook-static"
   },
