@@ -80,7 +80,7 @@ export const SERIES: SeriesDef[] = [
   fred("JTSQUR", "JTSQUR", "JOLTS quits rate", BLS, "M", "%"),
 
   // --- Activity ---
-  manual("ISM_MFG_PMI", "ISM Manufacturing PMI", "Institute for Supply Management (licensed, manual load)", "M", "index", "ISM data is proprietary and is not redistributed by FRED. Load via POST /api/manual if licensed."),
+  manual("ISM_MFG_PMI", "ISM Manufacturing PMI", "Institute for Supply Management (licensed, manual load)", "M", "index", "ISM data is proprietary and is not redistributed by FRED. Load via POST /api/recession/manual if licensed."),
   manual("ISM_MFG_NO", "ISM Manufacturing New Orders", "Institute for Supply Management (licensed, manual load)", "M", "index", "Proprietary - manual load only."),
   manual("ISM_MFG_EMP", "ISM Manufacturing Employment", "Institute for Supply Management (licensed, manual load)", "M", "index", "Proprietary - manual load only."),
   manual("ISM_SVC_PMI", "ISM Services PMI", "Institute for Supply Management (licensed, manual load)", "M", "index", "Proprietary - manual load only."),

@@ -77,7 +77,7 @@ export default async function SettingsPage() {
         <Panel title="Loading proprietary data (optional)">
           <div className="prose-sm text-sm text-ink-2">
             <p>ISM indices are proprietary and are not redistributed by FRED. If you hold a licence, load them via the authenticated endpoint (requires ADMIN_TOKEN):</p>
-            <pre className="overflow-x-auto rounded bg-surface-2 p-2 text-xs">{`curl -X POST $HOST/api/manual \\
+            <pre className="overflow-x-auto rounded bg-surface-2 p-2 text-xs">{`curl -X POST $HOST/api/recession/manual \\
   -H "x-admin-token: $ADMIN_TOKEN" -H "Content-Type: application/json" \\
   -d '{"seriesKey":"ISM_MFG_PMI","observations":[{"date":"2026-08-01","value":49.1}]}'`}</pre>
             <p>Accepted keys: {SERIES.filter((s) => s.provider === "manual").map((s) => s.key).join(", ")}.</p>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { PeriodSelector, TimeSeriesChart, type RefLine } from "./TimeSeriesChart";
+import { API } from "@/dashboards/recession/routes";
 
 const PERIODS = ["1M", "3M", "1Y", "5Y", "MAX"] as const;
 type Period = (typeof PERIODS)[number];
@@ -20,7 +21,7 @@ export function IndicatorChart({ id, refLines = [], decimals = 2 }: { id: string
   useEffect(() => {
     let alive = true;
     setErr(null);
-    fetch(`/api/indicators/${encodeURIComponent(id)}/series?period=${period}`)
+    fetch(`${API}/indicators/${encodeURIComponent(id)}/series?period=${period}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((j) => alive && setData(j))
       .catch((e) => alive && setErr(String(e)));

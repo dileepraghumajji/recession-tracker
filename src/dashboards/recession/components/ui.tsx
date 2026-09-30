@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { SIGNAL_META, TREND_META } from "@/dashboards/recession/lib/format";
 import type { Signal, Trend } from "@/dashboards/recession/lib/types";
 import { PageHeader, Panel, Pct, StatusTag } from "@/platform/components/ui";
+import { BASE } from "@/dashboards/recession/routes";
 
 export { PageHeader, Panel, Pct, StatusTag };
 
@@ -29,7 +30,7 @@ export function TrendArrow({ trend, showLabel = false }: { trend: Trend; showLab
 
 export function IndicatorLink({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <Link href={`/indicators/${id}`} className="hover:text-accent hover:underline">
+    <Link href={`${BASE}/indicators/${id}`} className="hover:text-accent hover:underline">
       {children}
     </Link>
   );

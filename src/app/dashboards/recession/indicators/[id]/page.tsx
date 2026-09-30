@@ -9,6 +9,7 @@ import { PageHeader, Panel, SignalBadge, StatusTag, TrendArrow } from "@/dashboa
 import { IndicatorChart } from "@/dashboards/recession/components/charts/IndicatorChart";
 import type { RefLine } from "@/dashboards/recession/components/charts/TimeSeriesChart";
 import { groupLabel } from "@/dashboards/recession/lib/engine/analyze";
+import { BASE } from "@/dashboards/recession/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,7 @@ export default async function IndicatorPage({ params }: { params: Promise<{ id: 
   return (
     <div className="space-y-5">
       <div className="text-xs text-muted">
-        <Link href="/indicators" className="link">
+        <Link href={`${BASE}/indicators`} className="link">
           Indicators
         </Link>{" "}
         / {groupLabel(def.group)}

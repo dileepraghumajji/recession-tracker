@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import type { AlertRule } from "@/dashboards/recession/lib/alerts";
+import { API } from "@/dashboards/recession/routes";
 
 interface AlertRow {
   id: string;
@@ -38,7 +39,7 @@ export function AlertsClient({ presets, indicators }: { presets: { label: string
   const [rule, setRule] = useState<AlertRule>(presets[0].rule);
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/alerts", { cache: "no-store" });
+    const r = await fetch(`${API}/alerts`, { cache: "no-store" });
     if (!r.ok) {
       setError(`Failed to load alerts (HTTP ${r.status})`);
       return;
@@ -56,16 +57,16 @@ export function AlertsClient({ presets, indicators }: { presets: { label: string
   const headers = () => ({ "Content-Type": "application/json", ...(token ? { "x-admin-token": token } : {}) });
   const create = async (n: string, r: AlertRule) => {
     setError(null);
-    const res = await fetch("/api/alerts", { method: "POST", headers: headers(), body: JSON.stringify({ name: n, rule: r }) });
+    const res = await fetch(`${API}/alerts`, { method: "POST", headers: headers(), body: JSON.stringify({ name: n, rule: r }) });
     if (!res.ok) setError((await res.json().catch(() => ({}))).error ?? `HTTP ${res.status}`);
     await load();
   };
   const remove = async (id: string) => {
-    await fetch(`/api/alerts/${id}`, { method: "DELETE", headers: headers() });
+    await fetch(`${API}/alerts/${id}`, { method: "DELETE", headers: headers() });
     await load();
   };
   const toggle = async (id: string, enabled: boolean) => {
-    await fetch(`/api/alerts/${id}`, { method: "PATCH", headers: headers(), body: JSON.stringify({ enabled }) });
+    await fetch(`${API}/alerts/${id}`, { method: "PATCH", headers: headers(), body: JSON.stringify({ enabled }) });
     await load();
   };
 

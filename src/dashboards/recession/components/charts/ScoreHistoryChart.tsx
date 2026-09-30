@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { PeriodSelector, TimeSeriesChart } from "./TimeSeriesChart";
+import { API } from "@/dashboards/recession/routes";
 
 type Row = { date: string; recession: number | null; inflation: number | null; financial: number | null; overall: number | null };
 const PERIODS = ["1M", "3M", "1Y", "5Y", "MAX"] as const;
@@ -20,7 +21,7 @@ export function ScoreHistoryChart({ weekly }: { weekly: Row[] }) {
   const long = period === "5Y" || period === "MAX";
   useEffect(() => {
     if (!long || monthly) return;
-    fetch("/api/score-history")
+    fetch(`${API}/score-history`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((j) => setMonthly(j.records))
       .catch((e) => setErr(String(e)));

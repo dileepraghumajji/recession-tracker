@@ -1,16 +1,17 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BASE } from "@/dashboards/recession/routes";
 
 const LINKS = [
-  ["/", "Dashboard"],
-  ["/indicators", "Indicators"],
-  ["/rates", "30Y / Rates"],
-  ["/methodology", "How the Score Works"],
-  ["/history", "Historical Comparison"],
-  ["/backtest", "Backtest"],
-  ["/alerts", "Alerts"],
-  ["/settings", "Settings & Data"],
+  [BASE, "Dashboard"],
+  [`${BASE}/indicators`, "Indicators"],
+  [`${BASE}/rates`, "30Y / Rates"],
+  [`${BASE}/methodology`, "How the Score Works"],
+  [`${BASE}/history`, "Historical Comparison"],
+  [`${BASE}/backtest`, "Backtest"],
+  [`${BASE}/alerts`, "Alerts"],
+  [`${BASE}/settings`, "Settings & Data"],
 ] as const;
 
 export function Nav() {
@@ -18,7 +19,7 @@ export function Nav() {
   return (
     <nav className="flex flex-wrap gap-x-1 gap-y-1 text-[13px]">
       {LINKS.map(([href, label]) => {
-        const active = href === "/" ? path === "/" : path.startsWith(href);
+        const active = href === BASE ? path === BASE : path.startsWith(href);
         return (
           <Link
             key={href}
