@@ -178,6 +178,28 @@ async function ensureData(): Promise<void> {
   }
 }
 
+function newestFetch(series: SeriesMap): string | null {
+  return Object.values(series).reduce<string | null>((m, s) => {
+    const f = s?.meta.fetchedAt ?? null;
+    return f && (!m || f > m) ? f : m;
+  }, null);
+}
+
+/**
+ * Cheap status for polling pages: the store's data version plus when the data
+ * behind it was fetched. Never loads observations; starts a background refresh
+ * when the cached data is older than the refresh interval.
+ */
+export async function liveStatus(): Promise<{ version: string; updatedAt: string | null }> {
+  const store = getStore();
+  const version = await store.dataVersion();
+  const c = cache();
+  const updatedAt = c.prepared?.version === version ? newestFetch(c.prepared.series) : null;
+  const limit = store.kind === "memory" ? TTL_MS() : 26 * 3600 * 1000;
+  if (updatedAt && Date.now() - Date.parse(updatedAt) > limit && !c.refreshing) keepAlive(refreshAll());
+  return { version, updatedAt };
+}
+
 async function loadPrepared(): Promise<{ version: string; series: SeriesMap; prepared: PreparedIndicator[] }> {
   await ensureData();
   const store = getStore();

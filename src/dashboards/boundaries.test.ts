@@ -37,7 +37,7 @@ function resolve(file: string, spec: string): string | null {
 const dashboardDirs = readdirSync(path.join(SRC, "dashboards")).filter((f) => statSync(path.join(SRC, "dashboards", f)).isDirectory());
 
 function owner(r: string): string | null {
-  // Route groups like app/(classic)/ don't change URLs, so they are transparent here.
+  // Route groups like app/(system)/ don't change URLs, so they are transparent here.
   const m = r.match(/^dashboards\/([^/]+)\//) ?? r.match(/^app\/(?:\([^/]+\)\/)?dashboards\/([^/]+)\//) ?? r.match(/^app\/api\/([^/]+)\//);
   return m && dashboardDirs.includes(m[1]) ? m[1] : null;
 }

@@ -20,6 +20,16 @@ export interface DashboardSummary {
   tone?: "good" | "neutral" | "warning" | "bad";
 }
 
+/** Cheap server-side check polled by open pages (GET /api/live/<id>). */
+export interface LiveStatus {
+  /** Changes whenever the dashboard's stored data changes; pages refresh when it does. */
+  version: string;
+  /** When the data behind the current version was last fetched/ingested (ISO), if known. */
+  updatedAt: string | null;
+  /** Optional one-line data-source note for the status indicator (e.g. a provider warning). */
+  note?: string | null;
+}
+
 export interface RefreshOutcome {
   ok: number;
   failed: number;
@@ -50,6 +60,12 @@ export interface DashboardManifest {
   disclaimer: string;
   /** Scheduled refresh (server only). Called by /api/cron/refresh and `npm run refresh`. */
   refresh?: () => Promise<RefreshOutcome>;
+  /**
+   * Live updates: open pages poll `status()` every `pollSeconds` (paused while the
+   * tab is hidden) and re-render when the version changes. `status` must be cheap
+   * (no full data load) and may kick off a background refresh when data is stale.
+   */
+  live?: { pollSeconds: number; status: () => Promise<LiveStatus> };
   /** Home-page headline (server only). Should resolve quickly; the home page times it out. */
   summary?: () => Promise<DashboardSummary | null>;
 }

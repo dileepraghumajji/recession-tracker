@@ -314,6 +314,34 @@ async function ensureData(): Promise<void> {
   if (age > limit && !cache().refreshing) keepAlive(refreshAll());
 }
 
+function newestFetch(series: SeriesMap, chains: OptionChainSnapshot[]): string | null {
+  let m: string | null = null;
+  for (const s of Object.values(series)) if (s?.meta.fetchedAt && (!m || s.meta.fetchedAt > m)) m = s.meta.fetchedAt;
+  // Chain snapshots carry their market timestamp; ignore any that lie ahead of the clock (e.g. synthetic closes).
+  const nowIso = new Date().toISOString();
+  for (const ch of chains) {
+    const t = new Date(ch.timestamp).toISOString();
+    if (t <= nowIso && (!m || t > m)) m = t;
+  }
+  return m;
+}
+
+/**
+ * Cheap status for polling pages: the store's data version plus when the data
+ * behind it was last fetched. Never loads observations; starts a background
+ * refresh when the cached data is older than the refresh interval.
+ */
+export async function liveStatus(): Promise<{ version: string; updatedAt: string | null }> {
+  const store = getStore();
+  const version = await store.dataVersion();
+  const c = cache();
+  const updatedAt = c.prepared?.version === version ? newestFetch(c.prepared.series, c.prepared.chains) : null;
+  const limit = store.kind === "memory" ? TTL_MS() : 26 * 3600 * 1000;
+  const fetched = c.prepared?.version === version ? newestFetch(c.prepared.series, []) : null;
+  if (fetched && Date.now() - Date.parse(fetched) > limit && !c.refreshing) keepAlive(refreshAll());
+  return { version, updatedAt };
+}
+
 async function loadPrepared() {
   await ensureData();
   const store = getStore();

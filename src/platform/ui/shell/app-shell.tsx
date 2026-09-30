@@ -5,6 +5,7 @@ import { Kbd } from "../primitives/misc";
 import { TooltipProvider } from "../primitives/tooltip";
 import { Logo } from "./logo";
 import type { NavDashboard } from "./nav-data";
+import { LiveStatus } from "./live-status";
 import { Breadcrumbs, CommandButton, CommandHost, MobileNav, PrefsMenu, SearchIconButton, SidebarNav, SidebarToggle, ThemeButton } from "./shell-islands";
 
 /**
@@ -52,6 +53,7 @@ export function AppShell({ dashboards, children, banner }: { dashboards: NavDash
               </span>
               <Breadcrumbs dashboards={dashboards} />
               <div className="ml-auto flex items-center gap-1">
+                <LiveStatus dashboards={dashboards} />
                 <CommandButton className="hidden h-8 w-64 items-center gap-2 rounded-md border border-line bg-surface px-2.5 text-xs text-muted transition-colors hover:border-line-strong md:flex">
                   <Search className="size-3.5" aria-hidden />
                   Search or jump to…

@@ -30,6 +30,13 @@ const india: DashboardManifest = {
     const r = await refreshAll();
     return { ok: r.ok.length, failed: r.failed.length, skipped: r.skipped.length, detail: r };
   },
+  live: {
+    pollSeconds: 60,
+    async status() {
+      const { liveStatus } = await import("./lib/data/service");
+      return liveStatus();
+    },
+  },
   async summary() {
     const { getSnapshot } = await import("./lib/data/service");
     const { configOverridesFromCookie } = await import("./lib/server-config");
