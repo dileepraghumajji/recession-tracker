@@ -10,11 +10,12 @@ import { buildSnapshot, type Snapshot } from "../engine/snapshot";
 import { configHash, resolveConfig, type ModelConfig } from "../model-config";
 import { SERIES } from "../series-catalog";
 import type { SeriesDef, SeriesMap, SeriesMeta } from "../types";
-import { mapLimit } from "./http";
+import { mapLimit } from "@/platform/data/http";
 import { fetchFred } from "./providers/fred";
 import { syntheticSeries } from "./providers/synthetic";
 import { fetchTwelveData, twelveDataConfigured } from "./providers/twelvedata";
 import { getStore } from "./store";
+import { postWebhook } from "@/platform/data/webhook";
 
 export function dataMode(): "live" | "demo" {
   return process.env.DATA_MODE === "demo" ? "demo" : "live";
@@ -226,19 +227,6 @@ export async function getSeriesForIndicator(id: string) {
   const p = prepared.find((x) => x.def.id === id);
   if (!p) return null;
   return { prepared: p, series };
-}
-
-async function postWebhook(payload: unknown) {
-  const url = process.env.ALERT_WEBHOOK_URL;
-  if (!url || !/^https:\/\//.test(url)) return;
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
-    await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal: ctrl.signal });
-    clearTimeout(t);
-  } catch (e) {
-    console.error("alert webhook failed", e instanceof Error ? e.message : e);
-  }
 }
 
 export async function evaluateAlerts(snap: Snapshot) {

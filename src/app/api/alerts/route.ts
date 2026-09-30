@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { NewAlertSchema, validateRule, describeRule, evaluateRule } from "@/dashboards/recession/lib/alerts";
 import { getStore } from "@/dashboards/recession/lib/data/store";
 import { evaluateAlerts, getSnapshot } from "@/dashboards/recession/lib/data/service";
-import { checkAdmin, errorResponse, rateLimit } from "@/dashboards/recession/lib/api-utils";
+import { checkAdmin, errorResponse, rateLimit } from "@/platform/api-utils";
 
 export const dynamic = "force-dynamic";
 

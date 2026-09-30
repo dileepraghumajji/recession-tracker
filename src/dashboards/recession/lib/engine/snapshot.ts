@@ -3,7 +3,7 @@
  * at past dates (for 1W/1M/3M changes and the score history chart).
  */
 import type { ModelConfig } from "../model-config";
-import { addDays, todayISO } from "../timeseries";
+import { addDays, todayISO } from "@/platform/lib/timeseries";
 import type { CompositeScore, DataStatus, IndicatorReading, ScoreId, SeriesMap } from "../types";
 import { analyzeIndicator, signalFor, type PreparedIndicator } from "./analyze";
 import { computeConfluence, groupScores, type Confluence } from "./confluence";

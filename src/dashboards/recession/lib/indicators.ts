@@ -12,7 +12,7 @@
  */
 import type { Frequency, IndicatorMembership, Obs, Polarity, StressMapping } from "./types";
 import { SERIES_BY_KEY } from "./series-catalog";
-import { diff, drawdown, lagChange, movingAverage, rollingMin, sahmRule, spread, yoy } from "./timeseries";
+import { diff, drawdown, lagChange, movingAverage, rollingMin, sahmRule, spread, yoy } from "@/platform/lib/timeseries";
 
 export type GroupId =
   | "rates"

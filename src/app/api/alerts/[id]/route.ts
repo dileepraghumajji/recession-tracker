@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStore } from "@/dashboards/recession/lib/data/store";
-import { checkAdmin, errorResponse } from "@/dashboards/recession/lib/api-utils";
+import { checkAdmin, errorResponse } from "@/platform/api-utils";
 
 export const dynamic = "force-dynamic";
 

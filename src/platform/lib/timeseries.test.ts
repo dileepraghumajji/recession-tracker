@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { drawdown, lagChange, movingAverage, percentileOf, piecewise, rollingMin, sahmRule, spread, yoy, monthEnds } from "./timeseries";
+import { drawdown, lagChange, movingAverage, percentileOf, piecewise, rollingMin, sahmRule, spread, yoy, monthEnds } from "@/platform/lib/timeseries";
 import type { Obs } from "./types";
 
 const monthly = (vals: number[], start = 2020): Obs[] =>

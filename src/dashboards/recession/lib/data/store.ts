@@ -3,7 +3,7 @@
  * memory store (suitable for local use / single instance; data re-fetched on
  * cold start, alerts not persisted across restarts).
  */
-import type { Pool } from "pg";
+import { databaseConfigured, pool } from "@/platform/data/db";
 import type { Alert, AlertEvent, AlertRule } from "../alerts";
 import type { Obs, SeriesMap, SeriesMeta } from "../types";
 
@@ -47,7 +47,7 @@ interface MemState {
   eventSeq: number;
 }
 
-const g = globalThis as unknown as { __mrsmMem?: MemState; __mrsmPool?: Pool };
+const g = globalThis as unknown as { __mrsmMem?: MemState };
 
 function mem(): MemState {
   if (!g.__mrsmMem) g.__mrsmMem = { series: {}, version: 0, snapshots: [], alerts: [], events: [], eventSeq: 0 };
@@ -121,29 +121,6 @@ export const memoryStore: Store = {
 };
 
 // ----------------------------------------------------------------- postgres
-/**
- * DATABASE_SSL: "require" = TLS with certificate verification (system CAs, or
- * DATABASE_CA_CERT when set, e.g. Supabase's root CA); "no-verify" = TLS without
- * verification (encrypted, but not protected against MITM); unset = no TLS.
- */
-export function sslConfig() {
-  const mode = process.env.DATABASE_SSL;
-  if (mode === "require") return { rejectUnauthorized: true, ca: process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n") || undefined };
-  if (mode === "no-verify") return { rejectUnauthorized: false };
-  return undefined;
-}
-
-async function pool(): Promise<Pool> {
-  if (g.__mrsmPool) return g.__mrsmPool;
-  const { Pool } = await import("pg");
-  g.__mrsmPool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: 5,
-    ssl: sslConfig(),
-  });
-  return g.__mrsmPool;
-}
-
 const iso = (d: Date | string | null): string | null => (d === null ? null : d instanceof Date ? d.toISOString() : new Date(d).toISOString());
 const dateStr = (d: Date | string): string => (d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10));
 
@@ -292,5 +269,5 @@ export const pgStore: Store = {
 };
 
 export function getStore(): Store {
-  return process.env.DATABASE_URL ? pgStore : memoryStore;
+  return databaseConfigured() ? pgStore : memoryStore;
 }

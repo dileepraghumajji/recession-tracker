@@ -3,7 +3,7 @@
  * correlations of polarity-adjusted monthly stress metrics over a recent window.
  */
 import type { ScoreId } from "../types";
-import { addDays, monthEnds, valueAtOrBefore, daysBetween } from "../timeseries";
+import { addDays, monthEnds, valueAtOrBefore, daysBetween } from "@/platform/lib/timeseries";
 import type { PreparedIndicator } from "./analyze";
 
 export interface CorrPair {

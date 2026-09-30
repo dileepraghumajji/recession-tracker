@@ -14,7 +14,7 @@ import {
   toTime,
   valueAtOrBefore,
   zScore,
-} from "../timeseries";
+} from "@/platform/lib/timeseries";
 import type { ChangeSet, DataStatus, Frequency, IndicatorReading, Obs, SeriesMap, Signal, Trend } from "../types";
 
 export interface PreparedIndicator {

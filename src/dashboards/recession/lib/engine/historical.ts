@@ -8,7 +8,7 @@
  * time; weights are judgemental and were NOT fitted to these recessions.
  */
 import type { ModelConfig } from "../model-config";
-import { addDays, monthEnds, todayISO } from "../timeseries";
+import { addDays, monthEnds, todayISO } from "@/platform/lib/timeseries";
 import type { ScoreId } from "../types";
 import type { PreparedIndicator } from "./analyze";
 import { CONFLUENCE_GROUPS, groupScores } from "./confluence";

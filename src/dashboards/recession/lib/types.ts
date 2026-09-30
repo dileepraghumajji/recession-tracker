@@ -2,13 +2,9 @@
  * Core domain types shared by the data layer, scoring engine, API routes and UI.
  */
 
-export type Frequency = "D" | "W" | "M" | "Q";
+import type { DataStatus, Frequency, Obs } from "@/platform/lib/types";
 
-/** A single dated observation. Dates are ISO `YYYY-MM-DD` strings (UTC, date only). */
-export interface Obs {
-  date: string;
-  value: number;
-}
+export type { DataStatus, Frequency, Obs };
 
 export type Provider = "fred" | "twelvedata" | "manual";
 
@@ -27,8 +23,6 @@ export interface SeriesDef {
   url?: string;
   notes?: string;
 }
-
-export type DataStatus = "LIVE" | "RECENT" | "STALE" | "UNAVAILABLE";
 
 export interface SeriesMeta {
   key: string;

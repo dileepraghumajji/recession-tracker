@@ -1,16 +1,8 @@
 import type { IndicatorReading, Signal, Trend } from "./types";
 import { INDICATOR_BY_ID } from "./indicators";
+import { fmtDate, fmtNum, fmtSigned } from "@/platform/lib/format";
 
-export function fmtNum(x: number | null | undefined, dp = 2): string {
-  if (x === null || x === undefined || !Number.isFinite(x)) return "—";
-  return x.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
-}
-
-export function fmtSigned(x: number | null | undefined, dp = 2, suffix = ""): string {
-  if (x === null || x === undefined || !Number.isFinite(x)) return "—";
-  const s = fmtNum(Math.abs(x), dp);
-  return `${x > 0 ? "+" : x < 0 ? "−" : "±"}${s}${suffix}`;
-}
+export { fmtDate, fmtNum, fmtSigned };
 
 export function unitSuffix(units: string): string {
   if (units === "%" || units === "pp") return "%";
@@ -72,9 +64,4 @@ export function scoreWord(score: number | null): string {
   if (score >= 50) return "in the watch range";
   if (score >= 35) return "moderate";
   return "low";
-}
-
-export function fmtDate(d: string | null | undefined): string {
-  if (!d) return "—";
-  return d.length > 10 ? new Date(d).toISOString().replace("T", " ").slice(0, 16) + " UTC" : d;
 }

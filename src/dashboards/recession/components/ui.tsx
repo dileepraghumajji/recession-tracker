@@ -1,21 +1,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SIGNAL_META, TREND_META } from "@/dashboards/recession/lib/format";
-import type { DataStatus, Signal, Trend } from "@/dashboards/recession/lib/types";
+import type { Signal, Trend } from "@/dashboards/recession/lib/types";
+import { PageHeader, Panel, Pct, StatusTag } from "@/platform/components/ui";
 
-export function Panel({ title, right, children, className = "" }: { title?: ReactNode; right?: ReactNode; children: ReactNode; className?: string }) {
-  return (
-    <section className={`panel p-4 ${className}`}>
-      {(title || right) && (
-        <div className="mb-3 flex items-center justify-between gap-2">
-          {title ? <h2 className="panel-title">{title}</h2> : <span />}
-          {right}
-        </div>
-      )}
-      {children}
-    </section>
-  );
-}
+export { PageHeader, Panel, Pct, StatusTag };
 
 export function SignalBadge({ signal, compact = false }: { signal: Signal; compact?: boolean }) {
   const m = SIGNAL_META[signal];
@@ -38,22 +27,6 @@ export function TrendArrow({ trend, showLabel = false }: { trend: Trend; showLab
   );
 }
 
-export function StatusTag({ status }: { status: DataStatus }) {
-  return <span className={`status-${status} font-mono text-[11px] tracking-wide`}>{status}</span>;
-}
-
-export function PageHeader({ title, subtitle, right }: { title: string; subtitle?: ReactNode; right?: ReactNode }) {
-  return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
-        {subtitle && <p className="mt-1 max-w-3xl text-sm text-ink-2">{subtitle}</p>}
-      </div>
-      {right}
-    </div>
-  );
-}
-
 export function IndicatorLink({ id, children }: { id: string; children: ReactNode }) {
   return (
     <Link href={`/indicators/${id}`} className="hover:text-accent hover:underline">
@@ -72,9 +45,4 @@ export function ScoreBar({ value }: { value: number | null }) {
       ))}
     </div>
   );
-}
-
-export function Pct({ v, dp = 0 }: { v: number | null | undefined; dp?: number }) {
-  if (v === null || v === undefined) return <span className="text-muted">—</span>;
-  return <span className="num">{(v * 100).toFixed(dp)}%</span>;
 }

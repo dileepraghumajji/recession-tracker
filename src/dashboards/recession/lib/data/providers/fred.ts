@@ -5,8 +5,8 @@
  */
 import { z } from "zod";
 import type { Obs, SeriesDef } from "../../types";
-import { sortAndClean } from "../../timeseries";
-import { fetchWithRetry, redact } from "../http";
+import { sortAndClean } from "@/platform/lib/timeseries";
+import { fetchWithRetry, redact } from "@/platform/data/http";
 
 const ObsSchema = z.object({
   observations: z.array(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), value: z.string() })).max(200_000),

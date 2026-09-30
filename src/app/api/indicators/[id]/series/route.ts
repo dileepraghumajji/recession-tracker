@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSeriesForIndicator } from "@/dashboards/recession/lib/data/service";
-import { errorResponse } from "@/dashboards/recession/lib/api-utils";
+import { errorResponse } from "@/platform/api-utils";
 import { stressSeries } from "@/dashboards/recession/lib/engine/stress-series";
 import { resolveConfig } from "@/dashboards/recession/lib/model-config";
-import { addDays } from "@/dashboards/recession/lib/timeseries";
+import { addDays } from "@/platform/lib/timeseries";
 import type { Obs } from "@/dashboards/recession/lib/types";
 
 export const dynamic = "force-dynamic";

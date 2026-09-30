@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { refreshAll } from "@/dashboards/recession/lib/data/service";
-import { checkCron, errorResponse } from "@/dashboards/recession/lib/api-utils";
+import { checkCron, errorResponse } from "@/platform/api-utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;

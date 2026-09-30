@@ -7,7 +7,7 @@
  * DATA_MODE=demo. Never enabled by default.
  */
 import type { Obs, SeriesDef } from "../../types";
-import { addDays, fromTime, toTime, todayISO } from "../../timeseries";
+import { addDays, fromTime, toTime, todayISO } from "@/platform/lib/timeseries";
 import { NBER_RECESSIONS } from "../../nber";
 
 function rng(seed: number) {

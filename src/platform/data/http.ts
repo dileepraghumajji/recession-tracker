@@ -19,7 +19,7 @@ export async function fetchWithRetry(url: string, opts: { retries?: number; time
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? 20_000);
     try {
-      const res = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "macro-recession-stress-monitor/0.1", ...opts.headers }, cache: "no-store" });
+      const res = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "terminalk/0.1", ...opts.headers }, cache: "no-store" });
       clearTimeout(timer);
       if (res.status === 429 || res.status >= 500) {
         lastErr = new HttpError(`HTTP ${res.status}`, res.status);

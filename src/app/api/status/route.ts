@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { environmentStatus } from "@/dashboards/recession/lib/data/service";
 import { getStore } from "@/dashboards/recession/lib/data/store";
 import { SERIES } from "@/dashboards/recession/lib/series-catalog";
-import { errorResponse } from "@/dashboards/recession/lib/api-utils";
+import { errorResponse } from "@/platform/api-utils";
 
 export const dynamic = "force-dynamic";
 

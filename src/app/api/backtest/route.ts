@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getHistorical } from "@/dashboards/recession/lib/data/service";
 import { runBacktest } from "@/dashboards/recession/lib/engine/historical";
-import { errorResponse, rateLimit } from "@/dashboards/recession/lib/api-utils";
+import { errorResponse, rateLimit } from "@/platform/api-utils";
 import { modelOverridesFromCookie } from "@/dashboards/recession/lib/server-config";
 import { parseBacktestParams } from "@/dashboards/recession/lib/backtest-params";
 
