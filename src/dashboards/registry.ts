@@ -3,9 +3,10 @@
  * navigation and on the home page. See CONTRIBUTING.md → "How to add a new dashboard".
  */
 import type { DashboardManifest } from "@/platform/dashboards";
+import india from "./india-sentiment/manifest";
 import recession from "./recession/manifest";
 
-export const DASHBOARDS: DashboardManifest[] = [recession];
+export const DASHBOARDS: DashboardManifest[] = [recession, india];
 
 export function getDashboard(id: string): DashboardManifest {
   const d = DASHBOARDS.find((x) => x.id === id);

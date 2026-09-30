@@ -153,5 +153,11 @@ export function narrative(args: {
   for (const f of scored.filter((x) => Math.abs((x.score as number) - 50) < 4 && x.effectiveWeight >= 0.08)) monitor.push(`${f.label} is near neutral (${(f.score as number).toFixed(0)}) and could tip either way.`);
   for (const s of args.staleCritical) monitor.push(`Data quality: ${s}`);
   if (!monitor.length) monitor.push("No active divergences or threshold proximity.");
-  return { whatChanged, whyItMatters, confirms: confirms.length ? confirms : ["No factor groups strongly confirm the reading."], contradicts: contradicts.length ? contradicts : ["No factor groups contradict the reading."], monitor };
+  return {
+    whatChanged,
+    whyItMatters,
+    confirms: confirms.length ? confirms.slice(0, 5) : ["No factor groups strongly confirm the reading."],
+    contradicts: contradicts.length ? contradicts.slice(0, 5) : ["No factor groups contradict the reading."],
+    monitor: monitor.slice(0, 6),
+  };
 }

@@ -123,6 +123,8 @@ export interface IndicatorReading {
   value: number | null;
   date: string | null;
   changes: { d1: number | null; w1: number | null; m1: number | null; m3: number | null };
+  /** Whether `changes` are % changes (prices) or differences (rates, ratios, flows). */
+  changeMode: "diff" | "pct";
   /** 0-100, higher = greed / risk-on. */
   score: number | null;
   /** Historical percentiles of the raw value (not polarity-adjusted). */

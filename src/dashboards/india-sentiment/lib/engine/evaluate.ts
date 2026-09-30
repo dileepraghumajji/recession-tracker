@@ -156,6 +156,7 @@ export function evaluateFull(p: Prepared, series: SeriesMap, asOf: string, cfg: 
     value: lite.value,
     date: lite.date,
     changes: { d1: change(1), w1: change(7), m1: change(30), m3: change(91) },
+    changeMode: d.changeMode,
     score: available ? lite.score : null,
     pct5y: i >= 0 ? pctOver(p.metric, i, 5) : null,
     pct10y: i >= 0 ? pctOver(p.metric, i, 10) : null,

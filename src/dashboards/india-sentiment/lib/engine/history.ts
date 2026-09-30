@@ -110,7 +110,7 @@ export function analogues(history: HistoryPoint[], current: Record<FactorId, num
     const similarity = common.length ? Math.max(0, 100 - common.reduce((s, c) => s + Math.abs(c.now - c.then), 0) / common.length) : null;
     const similarities = common.filter((c) => Math.abs(c.now - c.then) <= 10).sort((a, b) => Math.abs(a.now - a.then) - Math.abs(b.now - b.then));
     const differences = common.filter((c) => Math.abs(c.now - c.then) > 10).sort((a, b) => Math.abs(b.now - b.then) - Math.abs(a.now - a.then));
-    const name = (id: FactorId) => labels[id].toLowerCase();
+    const name = (id: FactorId) => labels[id];
     let text: string;
     if (common.length < 4) text = `Insufficient overlapping data to compare with ${p.label} (${common.length} common factor groups).`;
     else {
