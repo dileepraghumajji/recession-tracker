@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { API } from "../routes";
 import { PairChart, type PairPoint } from "./PairChart";
+import { buttonVariants } from "@/platform/ui/primitives/button";
 
 const FRAMES = [
   ["5m", 5],
@@ -42,7 +43,7 @@ export function PressureChart({ underlying }: { underlying: string }) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Timeframe">
         {FRAMES.map(([l, m]) => (
-          <button key={l} className="btn" aria-pressed={frame === m} onClick={() => setFrame(m)}>
+          <button key={l} className={buttonVariants({ size: "sm" })} aria-pressed={frame === m} onClick={() => setFrame(m)}>
             {l}
           </button>
         ))}

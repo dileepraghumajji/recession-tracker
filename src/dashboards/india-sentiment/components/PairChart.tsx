@@ -84,7 +84,7 @@ export function PairChart({
               <YAxis domain={bottomDomain ?? ["auto", "auto"]} width={64} tickFormatter={fmt} {...axis} />
               {tip}
               {bottomRef !== undefined && <ReferenceLine y={bottomRef} stroke="var(--axis)" strokeDasharray="3 3" />}
-              <Line dataKey="b" name={bottomLabel} stroke="var(--s-inflation)" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
+              <Line dataKey="b" name={bottomLabel} stroke="var(--series-2)" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
             </LineChart>
           )}
         </ResponsiveContainer>

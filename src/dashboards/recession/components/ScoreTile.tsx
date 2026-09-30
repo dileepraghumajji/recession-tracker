@@ -17,17 +17,17 @@ export function ScoreTile({
   const arrow = d === null ? "" : d > 2 ? "↑" : d < -2 ? "↓" : "→";
   const dirWord = d === null ? "no comparison" : d > 2 ? "rising" : d < -2 ? "easing" : "stable";
   return (
-    <div className="panel flex flex-col gap-2 p-4" style={{ borderTop: `2px solid ${color}` }}>
+    <div className="rounded-[10px] border border-line bg-surface flex flex-col gap-2 p-4" style={{ borderTop: `2px solid ${color}` }}>
       <div className="flex items-center justify-between">
-        <span className="panel-title">{score.label}</span>
+        <span className="text-2xs font-medium uppercase tracking-[0.08em] text-muted">{score.label}</span>
         <SignalBadge signal={score.signal} />
       </div>
       <div className="flex items-baseline gap-3">
         <span className="text-4xl font-semibold tracking-tight">{v === null ? "—" : v.toFixed(0)}</span>
         <span className="text-sm text-muted">/ 100</span>
       </div>
-      <div className="num text-xs text-ink-2">
-        <span className={d !== null && d > 2 ? "trend-bad" : d !== null && d < -2 ? "trend-good" : "trend-flat"}>
+      <div className="tabular-nums text-xs text-ink-2">
+        <span className={d !== null && d > 2 ? "text-serious" : d !== null && d < -2 ? "text-good-ink" : "text-muted"}>
           {arrow} {dirWord}
         </span>
         <span className="text-muted">

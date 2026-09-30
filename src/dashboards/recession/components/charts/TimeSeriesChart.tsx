@@ -1,6 +1,6 @@
 "use client";
 import { NBER_RECESSIONS } from "@/dashboards/recession/lib/nber";
-import { PeriodSelector, TimeSeriesChart as BaseChart, type ChartSeries, type RefLine } from "@/platform/components/charts/TimeSeriesChart";
+import { PeriodSelector, TimeSeriesChart as BaseChart, type ChartSeries, type RefLine } from "@/platform/ui/patterns/time-series-chart";
 
 export { PeriodSelector, type ChartSeries, type RefLine };
 

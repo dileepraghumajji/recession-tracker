@@ -41,20 +41,21 @@ export function fmtChange(id: string, v: number | null | undefined): string {
   }
 }
 
-export const SIGNAL_META: Record<Signal, { label: string; dot: string; cls: string }> = {
-  normal: { label: "Normal", dot: "🟢", cls: "sig-normal" },
-  watch: { label: "Watch", dot: "🟡", cls: "sig-watch" },
-  elevated: { label: "Elevated", dot: "🟠", cls: "sig-elevated" },
-  severe: { label: "Severe", dot: "🔴", cls: "sig-severe" },
-  unavailable: { label: "n/a", dot: "⚪", cls: "sig-na" },
+/** `color` is a design-system status token (always shown with the label or an sr-only label). */
+export const SIGNAL_META: Record<Signal, { label: string; dot: string; color: string }> = {
+  normal: { label: "Normal", dot: "🟢", color: "var(--good)" },
+  watch: { label: "Watch", dot: "🟡", color: "var(--warning)" },
+  elevated: { label: "Elevated", dot: "🟠", color: "var(--serious)" },
+  severe: { label: "Severe", dot: "🔴", color: "var(--critical)" },
+  unavailable: { label: "n/a", dot: "⚪", color: "var(--muted)" },
 };
 
 export const TREND_META: Record<Trend, { arrow: string; label: string; cls: string }> = {
-  deteriorating: { arrow: "↑", label: "Deteriorating", cls: "trend-bad" },
-  stable: { arrow: "→", label: "Stable", cls: "trend-flat" },
-  improving: { arrow: "↓", label: "Improving", cls: "trend-good" },
-  context: { arrow: "·", label: "Context-dependent", cls: "trend-flat" },
-  unknown: { arrow: "–", label: "Unknown", cls: "trend-flat" },
+  deteriorating: { arrow: "↑", label: "Deteriorating", cls: "text-serious" },
+  stable: { arrow: "→", label: "Stable", cls: "text-muted" },
+  improving: { arrow: "↓", label: "Improving", cls: "text-good-ink" },
+  context: { arrow: "·", label: "Context-dependent", cls: "text-muted" },
+  unknown: { arrow: "–", label: "Unknown", cls: "text-muted" },
 };
 
 export function scoreWord(score: number | null): string {

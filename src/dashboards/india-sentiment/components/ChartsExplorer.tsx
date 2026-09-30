@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { CHART_METRICS, CHART_PERIODS, type ChartPayload, type ChartPeriod } from "../lib/chart-metrics";
 import { API } from "../routes";
 import { PairChart } from "./PairChart";
+import { fieldClass } from "@/platform/ui/primitives/misc";
+import { buttonVariants } from "@/platform/ui/primitives/button";
 
 const REF: Record<string, number> = { sentiment: 50, oi_pcr: 1, premium_pcr: 1, pressure: 0, credit_stress: 50, fii: 0, earnings: 0 };
 
@@ -31,7 +33,7 @@ export function ChartsExplorer({ initialMetric = "sentiment", initialPeriod = "1
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         {!lockMetric && (
-          <select className="input" value={metric} onChange={(e) => setMetric(e.target.value)} aria-label="Comparison series">
+          <select className={fieldClass} value={metric} onChange={(e) => setMetric(e.target.value)} aria-label="Comparison series">
             {CHART_METRICS.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.top === "sentiment" ? "Sentiment" : "NIFTY"} vs {c.label}
@@ -41,7 +43,7 @@ export function ChartsExplorer({ initialMetric = "sentiment", initialPeriod = "1
         )}
         <div className="flex flex-wrap gap-1" role="group" aria-label="Timeframe">
           {CHART_PERIODS.map((p) => (
-            <button key={p} className="btn" aria-pressed={p === period} onClick={() => setPeriod(p)}>
+            <button key={p} className={buttonVariants({ size: "sm" })} aria-pressed={p === period} onClick={() => setPeriod(p)}>
               {p}
             </button>
           ))}

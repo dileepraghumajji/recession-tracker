@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { fmtSigned } from "@/platform/lib/format";
-import { PageHeader, Panel, StatusTag } from "@/platform/components/ui";
+import { Panel, StatusTag } from "@/platform/ui/patterns/content";
+import { PageHeader } from "@/platform/ui/shell/page-header";
 import { TONE_COLOR } from "../lib/format";
 import type { Band, FactorResult } from "../lib/types";
 
@@ -48,7 +49,7 @@ export function Delta({ v, label }: { v: number | null; label: string }) {
   return (
     <div className="flex flex-col">
       <span className="text-[10px] uppercase tracking-wide text-muted">{label}</span>
-      <span className={`num text-sm ${cls}`}>
+      <span className={`tabular-nums text-sm ${cls}`}>
         {arrow} {v === null ? "n/a" : fmtSigned(v, 1)}
       </span>
     </div>
@@ -70,8 +71,8 @@ export function FactorBars({ factors }: { factors: FactorResult[] }) {
               <div className="absolute inset-y-0 w-px bg-[var(--axis)]" style={{ left: "50%" }} />
               {s !== null && <div className="absolute inset-y-0 rounded-sm" style={{ left: `${left}%`, width: `${width}%`, background: s >= 50 ? "var(--good)" : "var(--serious)", opacity: 0.85 }} />}
             </div>
-            <span className={`num text-right ${s === null ? "text-muted" : ""}`}>{s === null ? "n/a" : s.toFixed(0)}</span>
-            <span className="num text-right text-muted">{s === null ? "—" : fmtSigned(f.points, 1)}</span>
+            <span className={`tabular-nums text-right ${s === null ? "text-muted" : ""}`}>{s === null ? "n/a" : s.toFixed(0)}</span>
+            <span className="tabular-nums text-right text-muted">{s === null ? "—" : fmtSigned(f.points, 1)}</span>
           </div>
         );
       })}
@@ -102,7 +103,7 @@ export function Tone({ tone, children }: { tone: "positive" | "negative" | "neut
 export function DemoWarning({ what }: { what: string }) {
   if (process.env.DATA_MODE !== "demo") return null;
   return (
-    <div className="panel p-3 text-sm" style={{ borderColor: "var(--demo)" }}>
+    <div className="rounded-[10px] border border-line bg-surface p-3 text-sm" style={{ borderColor: "var(--demo)" }}>
       <strong style={{ color: "var(--demo)" }}>Synthetic data:</strong> in demo mode the series are generated from a stylised NIFTY path, so these {what} are circular and meaningless. They only demonstrate the mechanics.
     </div>
   );

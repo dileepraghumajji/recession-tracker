@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { SIGNAL_META, TREND_META } from "@/dashboards/recession/lib/format";
 import type { Signal, Trend } from "@/dashboards/recession/lib/types";
-import { PageHeader, Panel, Pct, StatusTag } from "@/platform/components/ui";
+import { Panel, Pct, StatusTag } from "@/platform/ui/patterns/content";
+import { PageHeader } from "@/platform/ui/shell/page-header";
 import { BASE } from "@/dashboards/recession/routes";
 
 export { PageHeader, Panel, Pct, StatusTag };
@@ -10,12 +11,17 @@ export { PageHeader, Panel, Pct, StatusTag };
 export function SignalBadge({ signal, compact = false }: { signal: Signal; compact?: boolean }) {
   const m = SIGNAL_META[signal];
   return (
-    <span className={`${m.cls} inline-flex items-center gap-1.5 whitespace-nowrap text-xs`} title={m.label}>
-      <span className="sig-dot" aria-hidden />
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs" title={m.label}>
+      <SignalDot color={m.color} />
       {!compact && <span className="text-ink-2">{m.label}</span>}
       {compact && <span className="sr-only">{m.label}</span>}
     </span>
   );
+}
+
+/** Status dot in a design-system status colour; callers always add a label. */
+export function SignalDot({ color }: { color: string }) {
+  return <span className="inline-block size-[9px] flex-none rounded-full" style={{ background: color }} aria-hidden />;
 }
 
 export function TrendArrow({ trend, showLabel = false }: { trend: Trend; showLabel?: boolean }) {

@@ -8,10 +8,10 @@ const PERIODS = ["1M", "3M", "1Y", "5Y", "MAX"] as const;
 type Period = (typeof PERIODS)[number];
 
 const SERIES = [
-  { key: "recession", label: "Recession", color: "var(--s-recession)" },
-  { key: "inflation", label: "Inflation", color: "var(--s-inflation)" },
-  { key: "financial", label: "Financial", color: "var(--s-financial)" },
-  { key: "overall", label: "Overall", color: "var(--s-overall)", dash: "4 3" },
+  { key: "recession", label: "Recession", color: "var(--series-1)" },
+  { key: "inflation", label: "Inflation", color: "var(--series-2)" },
+  { key: "financial", label: "Financial", color: "var(--series-3)" },
+  { key: "overall", label: "Overall", color: "var(--ink-2)", dash: "4 3" },
 ];
 
 export function ScoreHistoryChart({ weekly }: { weekly: Row[] }) {

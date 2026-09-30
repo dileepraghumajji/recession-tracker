@@ -1,6 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
 import type { ChainAnalysis, SideRow, StrikeRow } from "../lib/engine/options";
+import { buttonVariants } from "@/platform/ui/primitives/button";
+import { tableClass } from "@/platform/ui/patterns/content";
 
 type Heat = "none" | "oi" | "premium" | "iv" | "volume";
 type SortKey = "strike" | "cOi" | "cDoi" | "cPrem" | "cIv" | "pIv" | "pPrem" | "pDoi" | "pOi";
@@ -54,7 +56,7 @@ export function ChainTable({ analysis }: { analysis: ChainAnalysis }) {
     if (heat === "none" || !s) return undefined;
     const m = side === "call" ? max.call : max.put;
     const a = m > 0 ? heatValue(s, heat) / m : 0;
-    return { background: `color-mix(in srgb, ${side === "call" ? "var(--s-inflation)" : "var(--accent)"} ${Math.round(a * 45)}%, transparent)` };
+    return { background: `color-mix(in srgb, ${side === "call" ? "var(--series-2)" : "var(--accent)"} ${Math.round(a * 45)}%, transparent)` };
   };
   const mark = (on: boolean) => (on ? "font-semibold underline decoration-dotted underline-offset-2" : "");
 
@@ -63,14 +65,14 @@ export function ChainTable({ analysis }: { analysis: ChainAnalysis }) {
       <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
         <span className="text-muted">Heatmap:</span>
         {(["none", "oi", "premium", "iv", "volume"] as const).map((h) => (
-          <button key={h} className="btn" aria-pressed={heat === h} onClick={() => setHeat(h)}>
+          <button key={h} className={buttonVariants({ size: "sm" })} aria-pressed={heat === h} onClick={() => setHeat(h)}>
             {h === "none" ? "Off" : h === "oi" ? "OI" : h === "iv" ? "IV" : h[0].toUpperCase() + h.slice(1)}
           </button>
         ))}
         <span className="ml-auto text-muted">Click a header to sort · underlined = largest in chain · hover a cell for the likely activity</span>
       </div>
       <div className="max-h-[640px] overflow-auto">
-        <table className="data">
+        <table className={tableClass}>
           <thead className="sticky top-0 bg-surface">
             <tr>
               {th("strike", "Strike", "")}
@@ -92,7 +94,7 @@ export function ChainTable({ analysis }: { analysis: ChainAnalysis }) {
               const atm = r.strike === atmStrike;
               return (
                 <tr key={r.strike} style={atm ? { outline: "1px solid var(--accent)" } : undefined}>
-                  <td className={`num ${atm ? "font-semibold" : ""}`}>{r.strike}</td>
+                  <td className={`tabular-nums ${atm ? "font-semibold" : ""}`}>{r.strike}</td>
                   <td className={`r ${mark(hl.maxCallOi === r.strike)}`} style={bg(c, "call")} title={c?.activityText}>{nf(c?.oi)}</td>
                   <td className={`r ${mark(hl.maxOiAdd?.strike === r.strike && hl.maxOiAdd.type === "CE")}`} style={bg(c, "call")} title={c?.activityText}>{c ? (c.changeInOi >= 0 ? "+" : "") + nf(c.changeInOi) : "—"}</td>
                   <td className={`r ${mark(hl.maxPremium?.strike === r.strike && hl.maxPremium.type === "CE")}`} style={bg(c, "call")} title={c ? `volume ${nf(c.volume)} · ${c.activityText}` : undefined}>{c ? cr(c.premium) : "—"}</td>
@@ -110,7 +112,7 @@ export function ChainTable({ analysis }: { analysis: ChainAnalysis }) {
       </div>
       <div className="mt-2 flex flex-wrap gap-4 text-[11px] text-muted">
         <span>
-          <span className="inline-block h-2 w-3 align-middle" style={{ background: "color-mix(in srgb, var(--s-inflation) 45%, transparent)" }} /> calls
+          <span className="inline-block h-2 w-3 align-middle" style={{ background: "color-mix(in srgb, var(--series-2) 45%, transparent)" }} /> calls
         </span>
         <span>
           <span className="inline-block h-2 w-3 align-middle" style={{ background: "color-mix(in srgb, var(--accent) 45%, transparent)" }} /> puts

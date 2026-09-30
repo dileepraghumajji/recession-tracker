@@ -1,7 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import type { AlertRule } from "../lib/alerts";
-import { API } from "../routes";
+import type { AlertRule } from "@/dashboards/recession/lib/alerts";
+import { API } from "@/dashboards/recession/routes";
+import { SignalDot } from "@/dashboards/recession/components/ui";
 import { fieldClass } from "@/platform/ui/primitives/misc";
 import { cn } from "@/platform/ui/cn";
 import { buttonVariants } from "@/platform/ui/primitives/button";
@@ -18,26 +19,22 @@ interface AlertRow {
 }
 interface EventRow {
   id: number;
+  alertId: string;
   triggeredAt: string;
   message: string;
 }
-export interface MetricOption {
-  id: string;
-  label: string;
-  unit: string;
-  changeUnit: string;
-}
+type Ind = { id: string; name: string; units: string; changeUnits: string };
 
-const tokenKey = "ims-admin-token";
-const getToken = () => {
+const tokenKey = "mrsm-admin-token";
+function getToken() {
   try {
     return sessionStorage.getItem(tokenKey) ?? "";
   } catch {
     return "";
   }
-};
+}
 
-export function AlertsClient({ presets, metrics }: { presets: { label: string; name: string; rule: AlertRule }[]; metrics: MetricOption[] }) {
+export function AlertsClient({ presets, indicators }: { presets: { label: string; name: string; rule: AlertRule }[]; indicators: Ind[] }) {
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [meta, setMeta] = useState<{ persistent: boolean; writeProtected: boolean } | null>(null);
@@ -48,7 +45,10 @@ export function AlertsClient({ presets, metrics }: { presets: { label: string; n
 
   const load = useCallback(async () => {
     const r = await fetch(`${API}/alerts`, { cache: "no-store" });
-    if (!r.ok) return setError(`Failed to load alerts (HTTP ${r.status})`);
+    if (!r.ok) {
+      setError(`Failed to load alerts (HTTP ${r.status})`);
+      return;
+    }
     const j = await r.json();
     setAlerts(j.alerts);
     setEvents(j.events);
@@ -60,9 +60,9 @@ export function AlertsClient({ presets, metrics }: { presets: { label: string; n
   }, [load]);
 
   const headers = () => ({ "Content-Type": "application/json", ...(token ? { "x-admin-token": token } : {}) });
-  const create = async () => {
+  const create = async (n: string, r: AlertRule) => {
     setError(null);
-    const res = await fetch(`${API}/alerts`, { method: "POST", headers: headers(), body: JSON.stringify({ name: name.trim() || "Untitled alert", rule }) });
+    const res = await fetch(`${API}/alerts`, { method: "POST", headers: headers(), body: JSON.stringify({ name: n, rule: r }) });
     if (!res.ok) setError((await res.json().catch(() => ({}))).error ?? `HTTP ${res.status}`);
     await load();
   };
@@ -74,25 +74,21 @@ export function AlertsClient({ presets, metrics }: { presets: { label: string; n
     await fetch(`${API}/alerts/${id}`, { method: "PATCH", headers: headers(), body: JSON.stringify({ enabled }) });
     await load();
   };
+
   const setKind = (kind: AlertRule["kind"]) => {
-    const metric = rule.metric;
-    if (kind === "level") setRule({ kind, metric, op: "above", level: 70 });
-    if (kind === "cross") setRule({ kind, metric, direction: "either", level: 50 });
-    if (kind === "change") setRule({ kind, metric, window: "w1", op: "either", amount: 10 });
+    if (kind === "indicator_level") setRule({ kind, indicatorId: "ust30y", op: "above", level: 5 });
+    if (kind === "indicator_change") setRule({ kind, indicatorId: "hy_oas", window: "m1", op: "rise", amount: 50 });
+    if (kind === "score_level") setRule({ kind, score: "recession", op: "above", level: 60 });
+    if (kind === "score_change") setRule({ kind, score: "recession", window: "m1", op: "either", amount: 10 });
   };
-  const m = metrics.find((x) => x.id === rule.metric);
-  const field = (label: string, el: React.ReactNode) => (
-    <label className="flex flex-col gap-1">
-      <span className="text-xs text-muted">{label}</span>
-      {el}
-    </label>
-  );
+  const ind = "indicatorId" in rule ? indicators.find((i) => i.id === rule.indicatorId) : undefined;
+  const changeUnitLabel = ind ? (ind.changeUnits === "bps" ? "bps" : ind.changeUnits === "pp" ? "pp" : ind.changeUnits === "%" ? "%" : ind.changeUnits) : "pts";
 
   return (
     <div className="space-y-5">
       {meta && (
         <div className="text-xs text-muted">
-          Storage: {meta.persistent ? "PostgreSQL (persistent)" : "in-memory (lost on restart — set DATABASE_URL to persist)"}. Alerts are evaluated after every refresh and ingestion; fired alerts are posted to ALERT_WEBHOOK_URL when configured.
+          Storage: {meta.persistent ? "PostgreSQL (persistent)" : "in-memory (lost on restart — set DATABASE_URL to persist)"}.{" "}
           {meta.writeProtected && (
             <label className="ml-2 inline-flex items-center gap-2">
               Admin token
@@ -113,13 +109,10 @@ export function AlertsClient({ presets, metrics }: { presets: { label: string; n
           )}
         </div>
       )}
-      {error && (
-        <div className="rounded-[10px] border border-line bg-surface p-3 text-sm" style={{ borderColor: "var(--critical)" }}>
-          {error}
-        </div>
-      )}
+      {error && <div className="rounded-[10px] border border-line bg-surface p-3 text-sm" style={{ borderColor: "var(--critical)" }}>{error}</div>}
+
       <section className="rounded-[10px] border border-line bg-surface p-4">
-        <h2 className="text-2xs font-medium uppercase tracking-[0.08em] text-muted mb-3">Templates (nothing is created until you click “Create alert”)</h2>
+        <h2 className="text-2xs font-medium uppercase tracking-[0.08em] text-muted mb-3">Quick start from a template (you choose the values)</h2>
         <div className="flex flex-wrap gap-2">
           {presets.map((p) => (
             <button
@@ -135,73 +128,91 @@ export function AlertsClient({ presets, metrics }: { presets: { label: string; n
           ))}
         </div>
       </section>
+
       <section className="rounded-[10px] border border-line bg-surface p-4">
         <h2 className="text-2xs font-medium uppercase tracking-[0.08em] text-muted mb-3">Configure alert</h2>
         <div className="flex flex-wrap items-end gap-3 text-sm">
-          {field("Name", <input className={cn(fieldClass, "w-56")} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sentiment below 30" />)}
-          {field(
-            "Metric",
-            <select className={cn(fieldClass, "max-w-72")} value={rule.metric} onChange={(e) => setRule({ ...rule, metric: e.target.value })}>
-              {metrics.map((x) => (
-                <option key={x.id} value={x.id}>
-                  {x.label}
-                </option>
-              ))}
-            </select>,
-          )}
-          {field(
-            "Type",
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-muted">Name</span>
+            <input className={cn(fieldClass, "w-56")} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. HY spreads widening" />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-muted">Type</span>
             <select className={fieldClass} value={rule.kind} onChange={(e) => setKind(e.target.value as AlertRule["kind"])}>
-              <option value="cross">Crosses a level</option>
-              <option value="level">Is above / below a level</option>
-              <option value="change">Changes by</option>
-            </select>,
+              <option value="indicator_level">Indicator crosses level</option>
+              <option value="indicator_change">Indicator changes by</option>
+              <option value="score_level">Score crosses level</option>
+              <option value="score_change">Score changes by</option>
+            </select>
+          </label>
+          {"indicatorId" in rule && (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-muted">Indicator</span>
+              <select className={cn(fieldClass, "max-w-64")} value={rule.indicatorId} onChange={(e) => setRule({ ...rule, indicatorId: e.target.value })}>
+                {indicators.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           )}
-          {rule.kind === "cross" &&
-            field(
-              "Direction",
-              <select className={fieldClass} value={rule.direction} onChange={(e) => setRule({ ...rule, direction: e.target.value as "up" })}>
-                <option value="either">either way</option>
-                <option value="up">upward</option>
-                <option value="down">downward</option>
-              </select>,
-            )}
-          {rule.kind === "level" &&
-            field(
-              "Condition",
-              <select className={fieldClass} value={rule.op} onChange={(e) => setRule({ ...rule, op: e.target.value as "above" })}>
-                <option value="above">above</option>
-                <option value="below">below</option>
-              </select>,
-            )}
-          {(rule.kind === "cross" || rule.kind === "level") &&
-            field(`Level${m?.unit ? ` (${m.unit.trim()})` : ""}`, <input className={cn(fieldClass, "w-28")} type="number" step="any" value={rule.level} onChange={(e) => setRule({ ...rule, level: Number(e.target.value) })} />)}
-          {rule.kind === "change" && (
+          {"score" in rule && (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-muted">Score</span>
+              <select className={fieldClass} value={rule.score} onChange={(e) => setRule({ ...rule, score: e.target.value as "recession" })}>
+                <option value="recession">Recession</option>
+                <option value="inflation">Inflation</option>
+                <option value="financial">Financial</option>
+                <option value="overall">Overall</option>
+              </select>
+            </label>
+          )}
+          {(rule.kind === "indicator_level" || rule.kind === "score_level") && (
             <>
-              {field(
-                "Direction",
-                <select className={fieldClass} value={rule.op} onChange={(e) => setRule({ ...rule, op: e.target.value as "rise" })}>
-                  <option value="either">moves by (either way)</option>
-                  <option value="rise">rises by</option>
-                  <option value="fall">falls by</option>
-                </select>,
-              )}
-              {field(`Amount${m?.changeUnit ? ` (${m.changeUnit.trim()})` : ""}`, <input className={cn(fieldClass, "w-28")} type="number" step="any" min={0} value={rule.amount} onChange={(e) => setRule({ ...rule, amount: Number(e.target.value) })} />)}
-              {field(
-                "Over",
-                <select className={fieldClass} value={rule.window} onChange={(e) => setRule({ ...rule, window: e.target.value as "w1" })}>
-                  <option value="d1">1 day</option>
-                  <option value="w1">1 week</option>
-                  <option value="m1">1 month</option>
-                </select>,
-              )}
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-muted">Condition</span>
+                <select className={fieldClass} value={rule.op} onChange={(e) => setRule({ ...rule, op: e.target.value as "above" | "below" })}>
+                  <option value="above">above</option>
+                  <option value="below">below</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-muted">Level {ind ? `(${ind.units})` : "(0–100)"}</span>
+                <input className={cn(fieldClass, "w-28")} type="number" step="any" value={rule.level} onChange={(e) => setRule({ ...rule, level: Number(e.target.value) })} />
+              </label>
             </>
           )}
-          <button className={buttonVariants({ size: "sm" })} onClick={create}>
+          {(rule.kind === "indicator_change" || rule.kind === "score_change") && (
+            <>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-muted">Direction</span>
+                <select className={fieldClass} value={rule.op} onChange={(e) => setRule({ ...rule, op: e.target.value as "rise" })}>
+                  <option value="rise">rises by</option>
+                  <option value="fall">falls by</option>
+                  <option value="either">moves by (either way)</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-muted">Amount ({rule.kind === "score_change" ? "pts" : changeUnitLabel})</span>
+                <input className={cn(fieldClass, "w-28")} type="number" step="any" min={0} value={rule.amount} onChange={(e) => setRule({ ...rule, amount: Number(e.target.value) })} />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-muted">Over</span>
+                <select className={fieldClass} value={rule.window} onChange={(e) => setRule({ ...rule, window: e.target.value as "m1" })}>
+                  <option value="w1">1 week</option>
+                  <option value="m1">1 month</option>
+                  <option value="m3">3 months</option>
+                </select>
+              </label>
+            </>
+          )}
+          <button className={buttonVariants({ size: "sm" })} onClick={() => create(name.trim() || "Untitled alert", rule)}>
             Create alert
           </button>
         </div>
       </section>
+
       <section className="rounded-[10px] border border-line bg-surface p-4">
         <h2 className="text-2xs font-medium uppercase tracking-[0.08em] text-muted mb-3">Your alerts</h2>
         {alerts.length === 0 ? (
@@ -223,7 +234,17 @@ export function AlertsClient({ presets, metrics }: { presets: { label: string; n
                   <td>{a.name}</td>
                   <td className="text-ink-2">{a.description}</td>
                   <td>
-                    {a.current.state === null ? <span className="text-muted">data unavailable</span> : a.current.state ? "Condition met" : "Not met"}
+                    {a.current.state === null ? (
+                      <span className="text-muted">data unavailable</span>
+                    ) : a.current.state ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <SignalDot color="var(--critical)" /> Condition met
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5">
+                        <SignalDot color="var(--good)" /> Not met
+                      </span>
+                    )}
                     <div className="text-[11px] text-muted">{a.current.detail}</div>
                   </td>
                   <td className="text-xs text-muted">{a.lastTriggeredAt ? a.lastTriggeredAt.replace("T", " ").slice(0, 16) : "never"}</td>
@@ -241,6 +262,7 @@ export function AlertsClient({ presets, metrics }: { presets: { label: string; n
           </table>
         )}
       </section>
+
       <section className="rounded-[10px] border border-line bg-surface p-4">
         <h2 className="text-2xs font-medium uppercase tracking-[0.08em] text-muted mb-3">Alert log</h2>
         {events.length === 0 ? (

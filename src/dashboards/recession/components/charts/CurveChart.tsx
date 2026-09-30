@@ -14,9 +14,9 @@ export function CurveChart({ rows }: { rows: { tenor: string; now: number | null
             formatter={(v, n) => [typeof v === "number" ? `${v.toFixed(2)}%` : "—", n]}
           />
           <Legend itemSorter={null} wrapperStyle={{ fontSize: 12 }} />
-          <Line dataKey="now" name="Today" stroke="var(--s-recession)" strokeWidth={2} dot={{ r: 4 }} isAnimationActive={false} connectNulls />
-          <Line dataKey="m3" name="3 months ago" stroke="var(--s-inflation)" strokeWidth={2} dot={{ r: 4 }} isAnimationActive={false} connectNulls />
-          <Line dataKey="m12" name="12 months ago" stroke="var(--s-financial)" strokeWidth={2} dot={{ r: 4 }} isAnimationActive={false} connectNulls />
+          <Line dataKey="now" name="Today" stroke="var(--series-1)" strokeWidth={2} dot={{ r: 4 }} isAnimationActive={false} connectNulls />
+          <Line dataKey="m3" name="3 months ago" stroke="var(--series-2)" strokeWidth={2} dot={{ r: 4 }} isAnimationActive={false} connectNulls />
+          <Line dataKey="m12" name="12 months ago" stroke="var(--series-3)" strokeWidth={2} dot={{ r: 4 }} isAnimationActive={false} connectNulls />
         </LineChart>
       </ResponsiveContainer>
     </div>

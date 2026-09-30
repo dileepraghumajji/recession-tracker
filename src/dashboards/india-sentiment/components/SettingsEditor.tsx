@@ -1,6 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { fieldClass } from "@/platform/ui/primitives/misc";
+import { cn } from "@/platform/ui/cn";
+import { buttonVariants } from "@/platform/ui/primitives/button";
 
 const COOKIE = "ims_model";
 
@@ -27,7 +30,7 @@ export function SettingsEditor({ current, defaults, labels }: { current: Editabl
   const num = (k: keyof EditableConfig, label: string, step = 0.05, hint?: string) => (
     <label className="flex flex-col gap-1">
       <span className="text-xs text-muted">{label}</span>
-      <input className="input w-28" type="number" step={step} value={c[k] as number} onChange={(e) => setC({ ...c, [k]: Number(e.target.value) })} />
+      <input className={cn(fieldClass, "w-28")} type="number" step={step} value={c[k] as number} onChange={(e) => setC({ ...c, [k]: Number(e.target.value) })} />
       {hint && <span className="text-[10px] text-muted">{hint}</span>}
     </label>
   );
@@ -49,13 +52,13 @@ export function SettingsEditor({ current, defaults, labels }: { current: Editabl
       <div>
         <div className="mb-2 flex items-baseline justify-between">
           <h3 className="text-sm font-semibold">Factor weights</h3>
-          <span className="num text-xs text-muted">total {total} — used as relative weights (renormalised), each factor capped at {(c.maxFactorShare * 100).toFixed(0)}% of the score</span>
+          <span className="tabular-nums text-xs text-muted">total {total} — used as relative weights (renormalised), each factor capped at {(c.maxFactorShare * 100).toFixed(0)}% of the score</span>
         </div>
         <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-4">
           {Object.entries(c.factorWeights).map(([id, w]) => (
             <label key={id} className="flex items-center justify-between gap-2 text-sm">
               <span className="text-ink-2">{labels[id]}</span>
-              <input className="input w-20" type="number" min={0} max={100} step={1} value={w} onChange={(e) => setC({ ...c, factorWeights: { ...c.factorWeights, [id]: Math.max(0, Number(e.target.value)) } })} />
+              <input className={cn(fieldClass, "w-20")} type="number" min={0} max={100} step={1} value={w} onChange={(e) => setC({ ...c, factorWeights: { ...c.factorWeights, [id]: Math.max(0, Number(e.target.value)) } })} />
             </label>
           ))}
         </div>
@@ -67,7 +70,7 @@ export function SettingsEditor({ current, defaults, labels }: { current: Editabl
             <label key={i} className="flex flex-col gap-1">
               <span className="text-[10px] text-muted">{BAND_NAMES[i]}</span>
               <input
-                className="input w-20"
+                className={cn(fieldClass, "w-20")}
                 type="number"
                 min={0}
                 max={100}
@@ -96,10 +99,10 @@ export function SettingsEditor({ current, defaults, labels }: { current: Editabl
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <button className="btn" onClick={() => save(false)}>
+        <button className={buttonVariants({ size: "sm" })} onClick={() => save(false)}>
           Save settings
         </button>
-        <button className="btn" onClick={() => save(true)}>
+        <button className={buttonVariants({ size: "sm" })} onClick={() => save(true)}>
           Reset to defaults
         </button>
         {msg && <span className="text-xs text-muted">{msg}</span>}

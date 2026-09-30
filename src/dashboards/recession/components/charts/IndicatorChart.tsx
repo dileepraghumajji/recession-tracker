@@ -41,7 +41,7 @@ export function IndicatorChart({ id, refLines = [], decimals = 2 }: { id: string
         <>
           <TimeSeriesChart
             rows={data.display.map((o) => ({ date: o.date, value: o.value }))}
-            series={[{ key: "value", label: data.name, color: "var(--s-recession)" }]}
+            series={[{ key: "value", label: data.name, color: "var(--series-1)" }]}
             refLines={refLines}
             decimals={decimals}
             recessions={long}
@@ -51,7 +51,7 @@ export function IndicatorChart({ id, refLines = [], decimals = 2 }: { id: string
               <p className="mb-1 text-xs text-muted">Stress score (0–100) from: {data.stressLabel}. Bands: 50 Watch · 75 Elevated · 90 Severe.</p>
               <TimeSeriesChart
                 rows={data.stress.map((o) => ({ date: o.date, stress: o.value }))}
-                series={[{ key: "stress", label: "Stress", color: "var(--s-inflation)" }]}
+                series={[{ key: "stress", label: "Stress", color: "var(--series-2)" }]}
                 yDomain={[0, 100]}
                 refLines={[
                   { y: 50, label: "50" },
