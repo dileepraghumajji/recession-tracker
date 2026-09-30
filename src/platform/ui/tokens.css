@@ -1,0 +1,207 @@
+/*
+ * TerminalK design tokens.
+ *
+ * Dark-first. Every value is a semantic role; components never use raw hex.
+ * Scope: everything inside `.tk` (the new shell). During the migration the
+ * legacy dashboards keep the root values from globals.css; once migrated the
+ * `.tk` values become the root values.
+ *
+ * Contrast (WCAG): all text roles >= 4.5:1 on surface and surface-2 in both
+ * themes. Market up/down pairs pass the colour-blind separation check
+ * (deutan ΔE >= 11 dark, >= 12 light) and are always paired with ▲/▼ + sign.
+ */
+
+.tk {
+  color-scheme: dark;
+  /* ── neutrals ───────────────────────────────────────────── */
+  --page: #09090b; /* app canvas */
+  --surface: #111113; /* widgets, sidebar */
+  --surface-2: #18181b; /* raised: hover, headers, inputs */
+  --surface-3: #212125; /* pressed / selected */
+  --border: rgba(255, 255, 255, 0.08); /* hairlines */
+  --border-strong: rgba(255, 255, 255, 0.15); /* inputs, focus-adjacent */
+  --ink: #ededef; /* primary text 16.1:1 */
+  --ink-2: #a1a1aa; /* secondary text 7.4:1 */
+  --muted: #8b8b94; /* tertiary text / axis 5.6:1 */
+  --grid: rgba(255, 255, 255, 0.06); /* chart gridlines */
+  --axis: rgba(255, 255, 255, 0.16);
+  /* ── brand accent (signal violet) ───────────────────────── */
+  --accent: #9d8cff; /* 6.9:1 as text */
+  --accent-fg: #0b0b0f; /* text on accent fill 7.1:1 */
+  --accent-subtle: rgba(157, 140, 255, 0.14);
+  --focus: #9d8cff;
+  /* ── market semantics (teal/red; alt scheme below) ──────── */
+  --up: #26a69a; /* fills & marks, 6.3:1 as text */
+  --down: #ef5350; /* 5.4:1 as text */
+  --up-fg: #26a69a;
+  --down-fg: #ef5350;
+  --up-subtle: rgba(38, 166, 154, 0.16);
+  --down-subtle: rgba(239, 83, 80, 0.16);
+  --flat: #8b8b94;
+  /* ── status (reserved: always icon + label) ─────────────── */
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --good-ink: #22c55e;
+  /* ── categorical series (validated order, dark steps) ───── */
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --demo: #fab219;
+  /* ── elevation ───────────────────────────────────────────── */
+  --elev-pop: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 40px -8px rgba(0, 0, 0, 0.6);
+  --elev-raised: 0 1px 0 0 rgba(255, 255, 255, 0.04) inset, 0 1px 2px rgba(0, 0, 0, 0.4);
+  /* ── density (comfortable) ──────────────────────────────── */
+  --row-h: 32px;
+  --control-h: 32px;
+  --widget-pad: 16px;
+  --gap: 12px;
+  --text-body: 13px;
+  /* ── motion ─────────────────────────────────────────────── */
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 260ms;
+
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: var(--text-body);
+  -webkit-font-smoothing: antialiased;
+  --tk-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root[data-theme="light"] .tk {
+  color-scheme: light;
+  --page: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
+  --surface-3: #e9e9ec;
+  --border: rgba(9, 9, 11, 0.09);
+  --border-strong: rgba(9, 9, 11, 0.18);
+  --ink: #09090b;
+  --ink-2: #52525b;
+  --muted: #65656e;
+  --grid: rgba(9, 9, 11, 0.06);
+  --axis: rgba(9, 9, 11, 0.18);
+  --accent: #5b47d6;
+  --accent-fg: #ffffff;
+  --accent-subtle: rgba(91, 71, 214, 0.1);
+  --focus: #5b47d6;
+  --up: #0e8a7d;
+  --down: #d93b39;
+  --up-fg: #0a7a6f; /* 5.2:1 */
+  --down-fg: #c8322f; /* 5.3:1 */
+  --up-subtle: rgba(14, 138, 125, 0.12);
+  --down-subtle: rgba(217, 59, 57, 0.1);
+  --flat: #65656e;
+  --good-ink: #006300;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+  --demo: #b77900;
+  --elev-pop: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 16px 40px -12px rgba(9, 9, 11, 0.25);
+  --elev-raised: 0 1px 2px rgba(9, 9, 11, 0.06);
+}
+
+/* Colour-blind-friendly market scheme (blue up / orange down), opt-in. */
+:root[data-market="blue-orange"] .tk {
+  --up: #4a93e6;
+  --down: #d9761c;
+  --up-fg: #4a93e6;
+  --down-fg: #dd7a1f;
+  --up-subtle: rgba(74, 147, 230, 0.16);
+  --down-subtle: rgba(217, 118, 28, 0.16);
+}
+:root[data-theme="light"][data-market="blue-orange"] .tk {
+  --up: #1f6fcf;
+  --down: #c9650a;
+  --up-fg: #1f6fcf;
+  --down-fg: #b85a08;
+  --up-subtle: rgba(31, 111, 207, 0.1);
+  --down-subtle: rgba(201, 101, 10, 0.1);
+}
+
+/* Density modes. */
+:root[data-density="compact"] .tk {
+  --row-h: 26px;
+  --control-h: 28px;
+  --widget-pad: 12px;
+  --gap: 8px;
+  --text-body: 12px;
+}
+:root[data-density="spacious"] .tk {
+  --row-h: 38px;
+  --control-h: 36px;
+  --widget-pad: 20px;
+  --gap: 16px;
+  --text-body: 14px;
+}
+
+.tk ::selection {
+  background: var(--accent-subtle);
+}
+.tk :focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skeleton shimmer (static when reduced motion is requested). */
+.tk .tk-shimmer {
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  animation: tk-shimmer 1.4s linear infinite;
+}
+@keyframes tk-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tk .tk-shimmer {
+    animation: none;
+  }
+  .tk *,
+  .tk *::before,
+  .tk *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Thin, theme-aware scrollbars inside the shell. */
+.tk * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* Widget grid chrome (react-grid-layout). */
+.tk .react-grid-item.react-grid-placeholder {
+  background: var(--accent-subtle);
+  border: 1px dashed var(--accent);
+  border-radius: 10px;
+  opacity: 1;
+}
+.tk .react-grid-item > .react-resizable-handle::after {
+  border-color: var(--muted);
+}
+.tk .react-grid-item {
+  transition-property: transform, width, height;
+  transition-duration: var(--dur-base);
+  transition-timing-function: var(--motion-ease);
+}

@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "react-grid-layout/css/styles.css";
+@import "../platform/ui/tokens.css";
 
 /* Theme tokens. Dark is the default; light is opt-in via the header toggle. */
 :root,
@@ -56,8 +59,37 @@
   --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  /* TerminalK design-system roles (values scoped in platform/ui/tokens.css) */
+  --color-surface-3: var(--surface-3);
+  --color-line-strong: var(--border-strong);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-up-fg: var(--up-fg);
+  --color-down-fg: var(--down-fg);
+  --color-up-subtle: var(--up-subtle);
+  --color-down-subtle: var(--down-subtle);
+  --color-flat: var(--flat);
+  --color-good: var(--good);
+  --color-warning: var(--warning);
+  --color-serious: var(--serious);
+  --color-critical: var(--critical);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-series-3: var(--series-3);
+  --color-series-4: var(--series-4);
+  --color-series-5: var(--series-5);
+  --color-series-6: var(--series-6);
+  --color-series-7: var(--series-7);
+  --color-series-8: var(--series-8);
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --shadow-pop: var(--elev-pop);
+  --shadow-raised: var(--elev-raised);
+  --ease-out-expo: var(--motion-ease);
   --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-mono: var(--tk-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
 }
 
 html,

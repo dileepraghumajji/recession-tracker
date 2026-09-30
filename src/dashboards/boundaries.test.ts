@@ -37,7 +37,8 @@ function resolve(file: string, spec: string): string | null {
 const dashboardDirs = readdirSync(path.join(SRC, "dashboards")).filter((f) => statSync(path.join(SRC, "dashboards", f)).isDirectory());
 
 function owner(r: string): string | null {
-  const m = r.match(/^dashboards\/([^/]+)\//) ?? r.match(/^app\/dashboards\/([^/]+)\//) ?? r.match(/^app\/api\/([^/]+)\//);
+  // Route groups like app/(classic)/ don't change URLs, so they are transparent here.
+  const m = r.match(/^dashboards\/([^/]+)\//) ?? r.match(/^app\/(?:\([^/]+\)\/)?dashboards\/([^/]+)\//) ?? r.match(/^app\/api\/([^/]+)\//);
   return m && dashboardDirs.includes(m[1]) ? m[1] : null;
 }
 
@@ -67,6 +68,16 @@ describe("module boundaries", () => {
   });
 });
 
+/** The dashboard's route folder, inside whichever route group holds it. */
+function routeDir(id: string): string {
+  const groups = ["", ...readdirSync(path.join(SRC, "app")).filter((f) => /^\(.+\)$/.test(f))];
+  for (const g of groups) {
+    const dir = path.join(SRC, "app", g, "dashboards", id);
+    if (existsSync(dir)) return dir;
+  }
+  return path.join(SRC, "app", "dashboards", id);
+}
+
 describe("dashboard registry", () => {
   it("has unique ids and follows folder/URL conventions", () => {
     const ids = DASHBOARDS.map((d) => d.id);
@@ -76,10 +87,11 @@ describe("dashboard registry", () => {
       expect(d.basePath).toBe(`/dashboards/${d.id}`);
       expect(d.apiBase).toBe(`/api/${d.id}`);
       expect(existsSync(path.join(SRC, "dashboards", d.id, "manifest.ts"))).toBe(true);
-      expect(existsSync(path.join(SRC, "app", "dashboards", d.id, "layout.tsx"))).toBe(true);
-      expect(existsSync(path.join(SRC, "app", "dashboards", d.id, "page.tsx"))).toBe(true);
+      const dir = routeDir(d.id);
+      expect(existsSync(path.join(dir, "layout.tsx"))).toBe(true);
+      expect(existsSync(path.join(dir, "page.tsx"))).toBe(true);
       for (const n of d.nav) {
-        const page = n.path ? path.join(SRC, "app", "dashboards", d.id, n.path, "page.tsx") : path.join(SRC, "app", "dashboards", d.id, "page.tsx");
+        const page = n.path ? path.join(dir, n.path, "page.tsx") : path.join(dir, "page.tsx");
         expect(existsSync(page), `${d.id} nav "${n.label}" has no page at ${rel(page)}`).toBe(true);
       }
     }
