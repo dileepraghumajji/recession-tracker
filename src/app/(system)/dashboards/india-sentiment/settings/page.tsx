@@ -100,6 +100,9 @@ export default async function Settings() {
           Dhan is used for NSE/BSE index history and today&apos;s prices, India VIX, NIFTY / BANKNIFTY / FINNIFTY option chains and intraday prices, through read-only data endpoints only. Credentials:{" "}
           <code>DHAN_ACCESS_TOKEN</code> and <code>DHAN_CLIENT_ID</code> (server environment). If the token expires or is rejected, this dashboard shows clearly labelled synthetic demo data until it is renewed.
         </p>
+        <p className="mt-2 text-[11px] text-muted">
+          Twelve Data (<code>TWELVE_DATA_API_KEY</code>, free plan) supplies ETF proxies for the Russell 2000 (IWM), MSCI Emerging Markets (EEM), MSCI World (URTH), gold (GLD) and silver (SLV); each series&apos; notes say it is a proxy. Hang Seng, Shanghai Composite and STOXX Europe 600 are not on the free plan and stay unfilled.
+        </p>
       </Panel>
 
       <Panel title="Market breadth (computed from Dhan stock candles)">
@@ -140,7 +143,7 @@ export default async function Settings() {
           </p>
           <ul>
             <li>
-              <strong>Provider adapter</strong>: Dhan is bundled (set <code>DHAN_ACCESS_TOKEN</code> and <code>DHAN_CLIENT_ID</code>). For another vendor, implement <code>MarketDataProvider</code> in{" "}
+              <strong>Provider adapter</strong>: Dhan (set <code>DHAN_ACCESS_TOKEN</code> and <code>DHAN_CLIENT_ID</code>) and Twelve Data (set <code>TWELVE_DATA_API_KEY</code>) are bundled. For another vendor, implement <code>MarketDataProvider</code> in{" "}
               <code>src/dashboards/india-sentiment/lib/data/providers/</code>, read its credentials from server-side environment variables, and register it in <code>provider.ts</code>. The scheduled refresh
               then pulls it.
             </li>

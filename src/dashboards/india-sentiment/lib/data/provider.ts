@@ -3,8 +3,9 @@
  * option chains) must come from a licensed market-data API — never scraping.
  *
  * Bundled: Dhan (providers/dhan.ts, DHAN_ACCESS_TOKEN + DHAN_CLIENT_ID; data
- * endpoints only). To connect another vendor (e.g. Upstox, Kite Connect, Angel
- * One SmartAPI, TrueData, Global Datafeeds):
+ * endpoints only) and Twelve Data for global ETF proxies and precious metals
+ * (providers/twelvedata.ts, TWELVE_DATA_API_KEY). To connect another vendor
+ * (e.g. Upstox, Kite Connect, Angel One SmartAPI, TrueData, Global Datafeeds):
  *   1. implement `MarketDataProvider` in providers/<vendor>.ts, reading its
  *      credentials from server-side environment variables only;
  *   2. add it to `PROVIDERS` below.
@@ -13,6 +14,7 @@
  */
 import type { Obs, OptionChainSnapshot, SeriesDef } from "../types";
 import { dhanProvider } from "./providers/dhan";
+import { twelveDataProvider } from "./providers/twelvedata";
 
 /** Health of a provider's credentials, for the UI and the demo-data fallback. */
 export interface ProviderStatus {
@@ -45,7 +47,7 @@ export interface MarketDataProvider {
 }
 
 /** Registered market-data providers, in priority order. */
-export const PROVIDERS: MarketDataProvider[] = [dhanProvider];
+export const PROVIDERS: MarketDataProvider[] = [dhanProvider, twelveDataProvider];
 
 export function providerFor(def: SeriesDef): MarketDataProvider | null {
   return PROVIDERS.find((p) => p.configured() && p.supports(def)) ?? null;

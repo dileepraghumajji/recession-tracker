@@ -32,6 +32,13 @@ const fred = (id: string, title: string, source: string, frequency: Frequency, u
 });
 const market = (key: string, title: string, source: string, frequency: Frequency, units: string, notes?: string): SeriesDef => ({ key, title, source, kind: "market", sourceId: key, frequency, units, notes });
 const manual = (key: string, title: string, source: string, frequency: Frequency, units: string, notes?: string): SeriesDef => ({ key, title, source, kind: "manual", sourceId: key, frequency, units, notes });
+const TD_ETF = "Twelve Data (NYSE Arca ETF, daily close)";
+const etfProxy = (etf: string, target: string, why: string, detail: string) =>
+  `ETF PROXY, not the ${target} itself: daily closes of the ${etf}, via Twelve Data (TWELVE_DATA_API_KEY; free plan). Used because ${why}. ${detail}`;
+const EQUITY_ETF =
+  "Split-adjusted USD price with distributions not added back, so it follows the index's price return less the fund's fees, with small timing differences around distributions.";
+const METAL_ETF = "Follows the metal's USD price less the trust's fee; one share is a fraction of an ounce that shrinks slowly with that fee, so use returns, not the price level.";
+const noFreeSource = (why: string) => `Not filled automatically: ${why}. A different index is never substituted. Load it with a licensed provider or the ingestion API.`;
 const derived = (key: string, title: string, units: string): SeriesDef => ({ key, title, source: "Computed from ingested option chains", kind: "derived", sourceId: key, frequency: "D", units });
 
 export const INDICES = [
@@ -150,12 +157,12 @@ export const SERIES: SeriesDef[] = [
   fred("BAMLEMCBPIOAS", "Emerging-markets corporate OAS", "ICE Data Indices", "D", "%"),
   fred("DGS10", "US 10Y Treasury yield", "Board of Governors of the Federal Reserve System", "D", "%"),
   fred("DGS2", "US 2Y Treasury yield", "Board of Governors of the Federal Reserve System", "D", "%"),
-  market("gl:RUT", "Russell 2000", "FTSE Russell (licensed provider)", "D", "index"),
-  market("gl:HSI", "Hang Seng", "Hang Seng Indexes (licensed provider)", "D", "index"),
-  market("gl:SHCOMP", "Shanghai Composite", "SSE (licensed provider)", "D", "index"),
-  market("gl:STOXX600", "STOXX Europe 600", "STOXX (licensed provider)", "D", "index"),
-  market("gl:MSCIEM", "MSCI Emerging Markets", "MSCI (licensed provider)", "D", "index"),
-  market("gl:MSCIWORLD", "MSCI World", "MSCI (licensed provider)", "D", "index"),
+  market("gl:RUT", "Russell 2000 (iShares IWM ETF proxy)", TD_ETF, "D", "USD (ETF price)", etfProxy("iShares Russell 2000 ETF (IWM)", "Russell 2000 index", "Twelve Data does not carry the Russell 2000 index", EQUITY_ETF)),
+  market("gl:HSI", "Hang Seng", "Hang Seng Indexes (licensed provider / ingestion)", "D", "index", noFreeSource("the Hang Seng index needs Twelve Data's Pro plan, its HKEX tracker (2800) needs Pro, and no US-listed ETF tracks it (EWH follows MSCI Hong Kong, a different index)")),
+  market("gl:SHCOMP", "Shanghai Composite", "SSE (licensed provider / ingestion)", "D", "index", noFreeSource("the SSE Composite index needs Twelve Data's Pro plan and no ETF tracks it (ASHR follows the CSI 300, a different index)")),
+  market("gl:STOXX600", "STOXX Europe 600", "STOXX (licensed provider / ingestion)", "D", "index", noFreeSource("the STOXX Europe 600 index needs Twelve Data's Pro plan, its XETRA tracker (EXSA) needs Grow, and US-listed Europe ETFs (VGK, IEUR) follow other indices in USD")),
+  market("gl:MSCIEM", "MSCI Emerging Markets (iShares EEM ETF proxy)", TD_ETF, "D", "USD (ETF price)", etfProxy("iShares MSCI Emerging Markets ETF (EEM)", "MSCI Emerging Markets Index", "Twelve Data does not carry MSCI indices", `${EQUITY_ETF} EEM trades in US hours, after most emerging markets have closed, so a day's move can show up on the next date.`)),
+  market("gl:MSCIWORLD", "MSCI World (iShares URTH ETF proxy)", TD_ETF, "D", "USD (ETF price)", etfProxy("iShares MSCI World ETF (URTH)", "MSCI World Index", "Twelve Data does not carry MSCI indices", EQUITY_ETF)),
 
   // Commodities
   fred("DCOILBRENTEU", "Brent crude", "U.S. Energy Information Administration", "D", "USD/bbl"),
@@ -163,8 +170,8 @@ export const SERIES: SeriesDef[] = [
   fred("DHHNGSP", "Henry Hub natural gas", "U.S. Energy Information Administration", "D", "USD/MMBtu"),
   fred("PCOPPUSDM", "Copper", "International Monetary Fund", "M", "USD/t"),
   fred("PALUMUSDM", "Aluminium", "International Monetary Fund", "M", "USD/t"),
-  market("cmd:GOLD", "Gold", "LBMA / MCX (licensed provider)", "D", "USD/oz"),
-  market("cmd:SILVER", "Silver", "LBMA / MCX (licensed provider)", "D", "USD/oz"),
+  market("cmd:GOLD", "Gold (SPDR GLD ETF proxy)", TD_ETF, "D", "USD (ETF price)", etfProxy("SPDR Gold Shares (GLD), a physically backed trust valued at the LBMA Gold Price PM", "gold spot price", "spot gold (XAU/USD) needs Twelve Data's Grow plan", METAL_ETF)),
+  market("cmd:SILVER", "Silver (iShares SLV ETF proxy)", TD_ETF, "D", "USD (ETF price)", etfProxy("iShares Silver Trust (SLV), a physically backed trust valued at the LBMA Silver Price", "silver spot price", "spot silver (XAG/USD) needs Twelve Data's Grow plan", METAL_ETF)),
   manual("cmd:STEEL", "Domestic HRC steel price", "Joint Plant Committee (Ministry of Steel)", "M", "₹/t"),
 
   // Valuation & earnings

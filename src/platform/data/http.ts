@@ -11,7 +11,10 @@ export class HttpError extends Error {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function fetchWithRetry(url: string, opts: { retries?: number; timeoutMs?: number; headers?: Record<string, string>; backoffBaseMs?: number } = {}): Promise<Response> {
+export async function fetchWithRetry(
+  url: string,
+  opts: { retries?: number; timeoutMs?: number; headers?: Record<string, string>; backoffBaseMs?: number; /** Return (not throw) other 4xx responses so the caller can read the API's error body. */ passClientErrors?: boolean } = {},
+): Promise<Response> {
   const retries = opts.retries ?? 3;
   const base = opts.backoffBaseMs ?? 1000;
   let lastErr: unknown;
@@ -24,10 +27,11 @@ export async function fetchWithRetry(url: string, opts: { retries?: number; time
       if (res.status === 429 || res.status >= 500) {
         lastErr = new HttpError(`HTTP ${res.status}`, res.status);
         const retryAfter = Number(res.headers.get("retry-after"));
+        if (attempt === retries) break; // no point waiting after the last attempt
         await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter, 60) * 1000 : base * 2 ** attempt);
         continue;
       }
-      if (!res.ok) throw new HttpError(`HTTP ${res.status}`, res.status);
+      if (!res.ok && !(opts.passClientErrors && res.status >= 400 && res.status < 500)) throw new HttpError(`HTTP ${res.status}`, res.status);
       return res;
     } catch (e) {
       clearTimeout(timer);

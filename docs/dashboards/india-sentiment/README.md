@@ -26,9 +26,37 @@ trading instructions.
 |---|---|---|
 | Dhan (automatic, when configured) | 16 NSE/BSE indices + India VIX (history since inception and today's price), NIFTY / BANKNIFTY / FINNIFTY option chains, intraday underlying prices | `DHAN_ACCESS_TOKEN` (+ `DHAN_CLIENT_ID`) — see below |
 | Market breadth from Dhan stock candles (automatic, when configured) | advances/declines, advancing/declining volume, new 52-week highs/lows, % of stocks above 20/50/100/200-DMA across ~2,600 NSE mainboard stocks | breadth job — see [Market breadth](#market-breadth) |
+| Twelve Data (automatic, when configured) | ETF proxies on the free plan: Russell 2000 (IWM), MSCI Emerging Markets (EEM), MSCI World (URTH), gold (GLD), silver (SLV) | `TWELVE_DATA_API_KEY` — see [Twelve Data provider](#twelve-data-provider) |
 | FRED (automatic) | USD/INR (Fed H.10), broad dollar, US yields, VIX, HY & EM OAS, S&P 500, Nasdaq, Nikkei, Brent, WTI, natural gas, copper, aluminium, India 10Y & 3M interbank (OECD), India IP, CPI, exports, GDP, reserves | `npm run refresh` / cron |
 | Licensed market data | NSE/BSE indices, India VIX, breadth, FII/DII & participant OI, option chains, G-Sec curve (CCIL), corporate spreads, valuation, consensus EPS, global indices not on FRED | a `MarketDataProvider` adapter, or `POST /api/india-sentiment/ingest` |
 | Official releases | RBI (repo, call money, liquidity, CP/CD, credit/deposit, NPA, reserves), AMFI, NSDL/CDSL, SEBI, MOSPI, Ministry of Finance | `POST /api/india-sentiment/ingest` |
+
+### Twelve Data provider
+
+`lib/data/providers/twelvedata.ts`, on the shared client `src/platform/data/twelvedata.ts` (also used by the recession
+dashboard). One `/time_series` request (1 credit) per series and refresh: split-adjusted daily closes, up to 5,000
+sessions, pinned to the NYSE Arca listing and checked for USD; today's bar is kept only after the 16:00 New York close.
+Calls are spaced 8 s apart per process to stay inside the free plan's 8 credits/minute (800/day).
+
+What the free Basic plan covers was checked on 2026-09-30 with the reference endpoints' `show_plan=true`:
+
+| Series | Filled from | Why |
+|---|---|---|
+| `gl:RUT` Russell 2000 | IWM (ETF proxy) | Index not in Twelve Data's catalogue |
+| `gl:MSCIEM` MSCI Emerging Markets | EEM (ETF proxy) | MSCI indices not in the catalogue |
+| `gl:MSCIWORLD` MSCI World | URTH (ETF proxy) | MSCI indices not in the catalogue |
+| `cmd:GOLD` Gold | GLD (ETF proxy, LBMA Gold Price PM) | XAU/USD needs Grow (commodities) |
+| `cmd:SILVER` Silver | SLV (ETF proxy, LBMA Silver Price) | XAG/USD needs Grow (commodities) |
+| `gl:HSI` Hang Seng | not filled | Index and HKEX tracker (2800) need Pro; no US-listed ETF tracks it |
+| `gl:SHCOMP` Shanghai Composite | not filled | Index needs Pro; no ETF tracks it |
+| `gl:STOXX600` STOXX Europe 600 | not filled | Index needs Pro, XETRA tracker (EXSA) needs Grow; US Europe ETFs follow other indices |
+
+All eight feed 1- or 3-month return indicators only, so a same-index ETF in the index's own currency (USD) is a
+usable proxy; each proxy's series notes say so. ETFs on a different index (EWH, ASHR, VGK, …) are never substituted.
+
+**Licence:** Twelve Data's pricing page describes the Basic plan as "internal non-display usage" (testing,
+evaluation, development; not displayed to users or used in production). Check that your plan's terms allow how the
+dashboard is used.
 
 ### Dhan provider
 
@@ -139,6 +167,7 @@ pressure, writing balance, ATM IV, skew, max-pain distance, later-expiry positio
 | `INDIA_SENTIMENT_CONFIG_OVERRIDES` | JSON overrides: `factorWeights`, `thresholds` (6 cut points), `maxFactorShare`, `percentileYears`, `strikeWindow`, PCR thresholds, `changeExplainThreshold`, `divergenceMovePct`. |
 | `ADMIN_TOKEN` | Required for `/api/india-sentiment/ingest`; protects alert writes. |
 | `DHAN_ACCESS_TOKEN`, `DHAN_CLIENT_ID` | Dhan market data (server only). Client id defaults to the token's `dhanClientId` claim. |
+| `TWELVE_DATA_API_KEY` | Twelve Data ETF proxies for global indices, gold and silver (server only; shared with the recession dashboard). |
 | `INDIA_LIVE_REFRESH_SECONDS` | Intraday refresh interval while the market may be open (default 180, minimum 60). |
 
 Tables: `db/migrations/002_india_sentiment.sql` and `003_india_jobs.sql` (`india_*`); run `npm run db:migrate` after
