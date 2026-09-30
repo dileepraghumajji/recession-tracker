@@ -2,16 +2,12 @@ import { Separator as SeparatorPrimitive } from "radix-ui";
 import * as React from "react";
 import { cn } from "../cn";
 
+/** Shared look of text inputs and native selects (sized by the caller). */
+export const fieldClass =
+  "h-[var(--control-h)] min-w-0 rounded-md border border-line-strong bg-surface px-2.5 text-[13px] text-ink placeholder:text-muted focus-visible:border-accent focus-visible:outline-none";
+
 export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      className={cn(
-        "h-[var(--control-h)] w-full min-w-0 rounded-md border border-line-strong bg-surface px-2.5 text-[13px] text-ink placeholder:text-muted focus-visible:border-accent focus-visible:outline-none",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <input className={cn(fieldClass, "w-full", className)} {...props} />;
 }
 
 export function Kbd({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
