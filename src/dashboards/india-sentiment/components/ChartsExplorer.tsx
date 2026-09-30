@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { CHART_METRICS, CHART_PERIODS, type ChartPayload, type ChartPeriod } from "../lib/chart-metrics";
 import { API } from "../routes";
-import { PairChart } from "./PairChart";
+import { PAIR_CHART_HEIGHT, PairChart } from "./PairChart";
+import { ChartSkeleton } from "@/platform/ui/patterns/skeletons";
 import { fieldClass } from "@/platform/ui/primitives/misc";
 import { buttonVariants } from "@/platform/ui/primitives/button";
 
@@ -52,6 +53,7 @@ export function ChartsExplorer({ initialMetric = "sentiment", initialPeriod = "1
       </div>
       {err && <p className="text-sm text-muted">Chart unavailable: {err}</p>}
       {data?.note && <p className="text-xs text-muted">{data.note}</p>}
+      {!data && !err && <ChartSkeleton height={PAIR_CHART_HEIGHT} />}
       {data && (
         <PairChart
           top={data.top.points}

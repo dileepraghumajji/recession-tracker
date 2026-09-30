@@ -1,7 +1,8 @@
 "use client";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-export function CurveChart({ rows }: { rows: { tenor: string; now: number | null; m3: number | null; m12: number | null }[] }) {
+/** Recharts implementation; import CurveChart from ./CurveChart (loaded lazily). */
+export default function CurveChartView({ rows }: { rows: { tenor: string; now: number | null; m3: number | null; m12: number | null }[] }) {
   return (
     <div style={{ width: "100%", height: 260 }}>
       <ResponsiveContainer>

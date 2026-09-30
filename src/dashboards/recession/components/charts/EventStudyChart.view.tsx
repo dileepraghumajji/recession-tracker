@@ -1,7 +1,8 @@
 "use client";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-export function EventStudyChart({ rows, threshold }: { rows: { offset: number; mean: number | null; min: number | null; max: number | null }[]; threshold: number }) {
+/** Recharts implementation; import EventStudyChart from ./EventStudyChart (loaded lazily). */
+export default function EventStudyChartView({ rows, threshold }: { rows: { offset: number; mean: number | null; min: number | null; max: number | null }[]; threshold: number }) {
   return (
     <div style={{ width: "100%", height: 260 }}>
       <ResponsiveContainer>

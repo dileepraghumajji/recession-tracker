@@ -16,7 +16,8 @@ const tooltipStyle = {
  * "A vs B" as two stacked panels sharing the time axis (synchronised crosshair),
  * instead of a dual-axis chart. The bottom panel can be a line or signed bars.
  */
-export function PairChart({
+/** Recharts implementation; import PairChart from ./PairChart (loaded lazily). */
+export default function PairChartView({
   top,
   bottom,
   topLabel,
